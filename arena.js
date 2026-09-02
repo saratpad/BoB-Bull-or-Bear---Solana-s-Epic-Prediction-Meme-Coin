@@ -186,56 +186,68 @@
     }, duration);
   }
 
-  // ── GET WALLET PROVIDER ──
-  function getSolanaProvider() {
-    if ('phantom' in window && window.phantom?.solana?.isPhantom) {
-      return window.phantom.solana;
+  // ── ROBUST MULTI-WALLET PROVIDER DETECTION ──
+  async function resolveSolanaProviderAsync(retries = 6, delayMs = 120) {
+    const check = () => {
+      // 1. Phantom (standard & injected)
+      if (window.phantom?.solana) return { provider: window.phantom.solana, name: 'Phantom' };
+      if (window.solana?.isPhantom) return { provider: window.solana, name: 'Phantom' };
+
+      // 2. Solflare
+      if (window.solflare?.isSolflare || (window.solflare && typeof window.solflare.connect === 'function')) {
+        return { provider: window.solflare, name: 'Solflare' };
+      }
+
+      // 3. Backpack
+      if (window.backpack?.isBackpack || window.backpack) {
+        return { provider: window.backpack, name: 'Backpack' };
+      }
+
+      // 4. Any Generic Solana Provider
+      if (window.solana && typeof window.solana.connect === 'function') {
+        return { provider: window.solana, name: 'Solana Wallet' };
+      }
+
+      return null;
+    };
+
+    let p = check();
+    if (p) return p;
+
+    // Retry loop in case extension content script injects with delay
+    for (let i = 0; i < retries; i++) {
+      await new Promise(r => setTimeout(r, delayMs));
+      p = check();
+      if (p) return p;
     }
-    if ('solana' in window && window.solana?.isPhantom) {
-      return window.solana;
-    }
-    if ('solflare' in window && window.solflare?.isSolflare) {
-      return window.solflare;
-    }
+
     return null;
   }
 
-  // ── SOL LIVE PRICE TRACKER ──
-  async function fetchLiveSolPrice() {
-    try {
-      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.solana && data.solana.usd) {
-          state.currentSolPrice = data.solana.usd;
-          renderPrice();
-          return;
-        }
-      }
-    } catch (err) {
-      // Fallback: slight organic fluctuation if api blocked / rate-limited
-      const delta = (Math.random() - 0.49) * 0.4;
-      state.currentSolPrice = Math.max(120, +(state.currentSolPrice + delta).toFixed(2));
-      renderPrice();
-    }
+  function getSolanaProvider() {
+    if (window.phantom?.solana) return window.phantom.solana;
+    if (window.solana?.isPhantom) return window.solana;
+    if (window.solflare?.isSolflare || window.solflare) return window.solflare;
+    if (window.solana && typeof window.solana.connect === 'function') return window.solana;
+    return null;
   }
 
   // Auto-connect on focus if user just unlocked wallet extension
   let isWaitingArenaUnlock = false;
   window.addEventListener('focus', async () => {
     if (isWaitingArenaUnlock && !state.connected) {
-      const provider = getSolanaProvider();
-      if (provider && provider.publicKey) {
+      const resolved = await resolveSolanaProviderAsync(4, 100);
+      if (resolved && resolved.provider && resolved.provider.publicKey) {
         isWaitingArenaUnlock = false;
         state.connected = true;
-        state.pubkey = provider.publicKey.toString();
+        state.pubkey = resolved.provider.publicKey.toString();
         localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'true');
         await updateWalletBalance(state.pubkey);
         renderUI();
         showToast('เชื่อมต่อกระเป๋าสำเร็จแล้ว! 🚀');
-      } else if (provider) {
+      } else if (resolved && resolved.provider) {
         try {
-          const resp = await provider.connect({ onlyIfTrusted: true });
+          const resp = await resolved.provider.connect({ onlyIfTrusted: true });
           if (resp && resp.publicKey) {
             isWaitingArenaUnlock = false;
             state.connected = true;
@@ -251,14 +263,22 @@
   });
 
   async function connectWallet() {
-    const provider = getSolanaProvider();
-    if (!provider) {
+    showToast('กำลังตรวจหากระเป๋า Solana... 🔍');
+    const resolved = await resolveSolanaProviderAsync(8, 100);
+
+    if (!resolved || !resolved.provider) {
+      const tipBox = document.getElementById('arena-file-protocol-tip');
+      if (tipBox) {
+        tipBox.style.display = (window.location.protocol === 'file:') ? 'block' : 'none';
+      }
       if (el.walletFallbackModal) el.walletFallbackModal.style.display = 'flex';
       return;
     }
 
+    const { provider, name } = resolved;
+
     try {
-      showToast('กำลังเชื่อมต่อกระเป๋า... 👻');
+      showToast(`กำลังเชื่อมต่อ ${name}... 👻`);
       isWaitingArenaUnlock = true;
       
       let resp;
@@ -732,6 +752,15 @@
 
     const copyBtn2 = document.getElementById('arena-ca-copy-btn-connected');
     if (copyBtn2) copyBtn2.addEventListener('click', copyArenaCA);
+
+    // Wallet Retry Button in Fallback Modal
+    const arenaRetryBtn = document.getElementById('arena-wallet-retry-btn');
+    if (arenaRetryBtn) {
+      arenaRetryBtn.addEventListener('click', () => {
+        if (el.walletFallbackModal) el.walletFallbackModal.style.display = 'none';
+        connectWallet();
+      });
+    }
   }
 
   // ── INIT ──

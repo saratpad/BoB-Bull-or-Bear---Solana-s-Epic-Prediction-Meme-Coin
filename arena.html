@@ -28,7 +28,7 @@
     <div class="nav-inner">
       <a href="index.html" class="nav-brand">
         <img src="logo.jpeg" alt="BoB" class="nav-logo" />
-        <span class="nav-brand-text"><span class="hero-b-bull">B</span><span class="hero-o-core">o</span><span class="hero-b-bear">B</span></span>
+        <span class="nav-brand-text"><span class="hero-b-bull fire-green" data-text="B">B</span><span class="hero-o-core">o</span><span class="hero-b-bear fire-red" data-text="B">B</span></span>
         <span class="arena-nav-badge">ARENA</span>
       </a>
       <div class="arena-nav-center">
@@ -50,26 +50,41 @@
   <div id="wallet-fallback-modal" class="modal-overlay" style="display:none;">
     <div class="modal wallet-modal">
       <div class="modal-header">
-        <h3 class="modal-title">Install Solana Wallet</h3>
+        <h3 class="modal-title">เชื่อมต่อกระเป๋า Solana</h3>
         <button class="modal-close" data-close="wallet-fallback-modal">✕</button>
       </div>
-      <p class="modal-desc">No Solana wallet detected. Install one to enter BoB Arena:</p>
+
+      <!-- File Protocol / Extension Notice -->
+      <div id="arena-file-protocol-tip" class="wallet-tip-box" style="display:none; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 16px; font-size: 0.8rem; color: #fde047; text-align: left;">
+        <p style="margin: 0 0 6px 0; font-weight: 700;">⚠️ มี Phantom อยู่แล้วแต่ระบบมองไม่เห็น?</p>
+        <p style="margin: 0 0 10px 0; line-height: 1.4; color: #cbd5e1;">หากท่านเปิดไฟล์แบบ <code>file:///</code> ในเครื่อง Chrome จะปิดกั้น Extension เป็นค่าเริ่มต้น กรุณาเปิดผ่านลิงก์ Vercel หรือกด Retry</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a href="https://bo-b-bull-or-bear-solana-s-epic-pre.vercel.app/arena.html" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.75rem; text-decoration: none;">
+            🚀 เปิด Arena ผ่าน Vercel
+          </a>
+          <button id="arena-wallet-retry-btn" class="btn btn-ghost" style="padding: 6px 14px; font-size: 0.75rem;">
+            🔄 ลองตรวจใหม่อีกครั้ง
+          </button>
+        </div>
+      </div>
+
+      <p class="modal-desc" id="arena-fallback-desc">ยังตรวจไม่พบส่วนขยายกระเป๋าในเบราว์เซอร์ หากยังไม่ได้ติดตั้ง สามารถติดตั้งได้ที่นี่:</p>
       <div class="wallet-options">
         <a href="https://phantom.app/" target="_blank" rel="noopener" class="wallet-option">
           <div class="wallet-option-icon">👻</div>
           <div class="wallet-option-info">
-            <span class="wallet-option-name">Phantom</span>
-            <span class="wallet-option-status">Most Popular</span>
+            <span class="wallet-option-name">Phantom Wallet</span>
+            <span class="wallet-option-status">ยอดนิยมอันดับ 1 สำหรับ Solana</span>
           </div>
-          <span class="wallet-option-arrow">Install ↗</span>
+          <span class="wallet-option-arrow">ดาวน์โหลด ↗</span>
         </a>
         <a href="https://solflare.com/" target="_blank" rel="noopener" class="wallet-option">
           <div class="wallet-option-icon">🌞</div>
           <div class="wallet-option-info">
-            <span class="wallet-option-name">Solflare</span>
-            <span class="wallet-option-status">Full Security</span>
+            <span class="wallet-option-name">Solflare Wallet</span>
+            <span class="wallet-option-status">ปลอดภัยสูงสำหรับ Web3</span>
           </div>
-          <span class="wallet-option-arrow">Install ↗</span>
+          <span class="wallet-option-arrow">ดาวน์โหลด ↗</span>
         </a>
       </div>
     </div>
@@ -113,7 +128,7 @@
     <div id="arena-not-connected" class="arena-gate">
       <div class="arena-gate-inner">
         <img src="logo.jpeg" alt="BoB" class="arena-gate-logo" />
-        <h1 class="arena-gate-title"><span class="hero-b-bull">B</span><span class="hero-o-core">o</span><span class="hero-b-bear">B</span> <span class="text-dim">ARENA</span></h1>
+        <h1 class="arena-gate-title"><span class="hero-b-bull fire-green" data-text="B">B</span><span class="hero-o-core">o</span><span class="hero-b-bear fire-red" data-text="B">B</span> <span class="text-dim">ARENA</span></h1>
         <p class="arena-gate-subtitle">Stake $BoB • Predict SOL • Dominate the Round</p>
         <p class="arena-gate-desc">Connect your Solana wallet to enter the prediction battlefield. Stake your $BoB tokens, choose Bull or Bear, and battle for the winners pool.</p>
         <button id="arena-gate-connect" class="btn btn-primary btn-lg">

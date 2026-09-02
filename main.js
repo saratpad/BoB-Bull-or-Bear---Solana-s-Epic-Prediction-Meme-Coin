@@ -443,20 +443,41 @@
   /* ═══════════════════════════════════════════════
      5. 1-CLICK DIRECT SOLANA WALLET CONNECT
      ═══════════════════════════════════════════════ */
-  function getPhantomProvider() {
-    if (window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) {
-      return window.phantom.solana;
-    }
-    if (window.solana && window.solana.isPhantom) {
-      return window.solana;
-    }
-    return null;
-  }
+  /* Robust Multi-Wallet Provider Detection */
+  async function resolveSolanaProviderAsync(retries = 6, delayMs = 120) {
+    const check = () => {
+      // 1. Phantom (standard & injected)
+      if (window.phantom?.solana) return { provider: window.phantom.solana, name: 'Phantom' };
+      if (window.solana?.isPhantom) return { provider: window.solana, name: 'Phantom' };
 
-  function getSolflareProvider() {
-    if (window.solflare && window.solflare.isSolflare) {
-      return window.solflare;
+      // 2. Solflare
+      if (window.solflare?.isSolflare || (window.solflare && typeof window.solflare.connect === 'function')) {
+        return { provider: window.solflare, name: 'Solflare' };
+      }
+
+      // 3. Backpack
+      if (window.backpack?.isBackpack || window.backpack) {
+        return { provider: window.backpack, name: 'Backpack' };
+      }
+
+      // 4. Any Generic Solana Provider
+      if (window.solana && typeof window.solana.connect === 'function') {
+        return { provider: window.solana, name: 'Solana Wallet' };
+      }
+
+      return null;
+    };
+
+    let p = check();
+    if (p) return p;
+
+    // Retry loop in case extension content script injects with delay
+    for (let i = 0; i < retries; i++) {
+      await new Promise(r => setTimeout(r, delayMs));
+      p = check();
+      if (p) return p;
     }
+
     return null;
   }
 
@@ -466,28 +487,39 @@
     if (stakingConnectBtn) stakingConnectBtn.addEventListener('click', handleDirectConnect);
     if (walletDisconnectBtn) walletDisconnectBtn.addEventListener('click', disconnectWallet);
 
-    // Auto-check if Phantom was already authorized
-    if (window.solana && window.solana.isPhantom && window.solana.isConnected) {
-      handleWalletAuthorized(window.solana, 'phantom');
+    const retryBtn = document.getElementById('wallet-retry-btn-index');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        closeModal('wallet-fallback-modal');
+        handleDirectConnect();
+      });
     }
+
+    // Auto-check if previously connected
+    setTimeout(async () => {
+      const resolved = await resolveSolanaProviderAsync(3, 100);
+      if (resolved && resolved.provider && resolved.provider.isConnected && resolved.provider.publicKey) {
+        handleWalletAuthorized(resolved.provider, resolved.name, resolved.provider.publicKey.toString());
+      }
+    }, 400);
   }
 
   // Focus listener to auto-connect after user unlocks wallet extension
   let isWaitingForUnlock = false;
   window.addEventListener('focus', async () => {
     if (isWaitingForUnlock && !isWalletConnected) {
-      const phantom = getPhantomProvider();
-      if (phantom && phantom.publicKey) {
+      const resolved = await resolveSolanaProviderAsync(4, 100);
+      if (resolved && resolved.provider && resolved.provider.publicKey) {
         isWaitingForUnlock = false;
-        handleWalletAuthorized(phantom, 'phantom', phantom.publicKey.toString());
-        showToast('Wallet unlocked & connected successfully! 🚀');
-      } else if (phantom) {
+        handleWalletAuthorized(resolved.provider, resolved.name, resolved.provider.publicKey.toString());
+        showToast('เชื่อมต่อกระเป๋าสำเร็จแล้ว! 🚀');
+      } else if (resolved && resolved.provider) {
         try {
-          const resp = await phantom.connect({ onlyIfTrusted: true });
+          const resp = await resolved.provider.connect({ onlyIfTrusted: true });
           if (resp && resp.publicKey) {
             isWaitingForUnlock = false;
-            handleWalletAuthorized(phantom, 'phantom', resp.publicKey.toString());
-            showToast('Wallet unlocked & connected successfully! 🚀');
+            handleWalletAuthorized(resolved.provider, resolved.name, resp.publicKey.toString());
+            showToast('เชื่อมต่อกระเป๋าสำเร็จแล้ว! 🚀');
           }
         } catch (e) {}
       }
@@ -501,37 +533,36 @@
       return;
     }
 
-    const phantom = getPhantomProvider();
-    const solflare = getSolflareProvider();
+    showToast('กำลังตรวจหากระเป๋า Solana... 🔍', false);
+    const resolved = await resolveSolanaProviderAsync(8, 100);
 
-    // Direct Connect flow: Priority Phantom
-    if (phantom) {
+    if (resolved && resolved.provider) {
+      const { provider, name } = resolved;
       try {
-        showToast('กำลังเชื่อมต่อกระเป๋า Phantom... 👻');
+        showToast(`กำลังเชื่อมต่อ ${name}... 👻`);
         isWaitingForUnlock = true;
         
         let resp;
         try {
           // If already unlocked, resolves immediately. If locked, triggers password unlock popup!
-          resp = await phantom.connect();
+          resp = await provider.connect();
         } catch (firstErr) {
           if (firstErr && firstErr.code === -32603) {
-            // Extension opened password prompt
             showToast('🔐 หน้าต่างปลดล็อกกระเป๋าเปิดแล้ว กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบทันที', false);
             return;
           }
           throw firstErr;
         }
 
-        const pubkeyStr = (resp && resp.publicKey) ? resp.publicKey.toString() : (phantom.publicKey ? phantom.publicKey.toString() : null);
+        const pubkeyStr = (resp && resp.publicKey) ? resp.publicKey.toString() : (provider.publicKey ? provider.publicKey.toString() : null);
         if (pubkeyStr) {
           isWaitingForUnlock = false;
-          handleWalletAuthorized(phantom, 'phantom', pubkeyStr);
+          handleWalletAuthorized(provider, name, pubkeyStr);
           showToast('เชื่อมต่อกระเป๋าสำเร็จ! 🚀');
           return;
         }
       } catch (err) {
-        console.warn('Phantom connect error detail:', err);
+        console.warn(`${name} connect error:`, err);
         
         if (err.code === 4001 || (err.message && err.message.toLowerCase().includes('user rejected'))) {
           isWaitingForUnlock = false;
@@ -540,31 +571,19 @@
         }
 
         if (err.message && (err.message.includes('Unexpected error') || err.code === -32603)) {
-          showToast('🔐 กรุณาใส่รหัสผ่านปลดล็อกที่หน้าต่าง Phantom เพื่อเข้าสู่ระบบทันที', false);
+          showToast('🔐 กรุณาใส่รหัสผ่านปลดล็อกที่หน้าต่างกระเป๋า เพื่อเข้าสู่ระบบทันที', false);
           return;
         }
 
         showToast('แจ้งเตือนกระเป๋า: ' + (err.message || 'กรุณาตรวจสอบส่วนขยายกระเป๋าเงิน'), true);
         return;
       }
-    } else if (solflare) {
-      try {
-        showToast('กำลังเชื่อมต่อกระเป๋า Solflare... 🌞');
-        isWaitingForUnlock = true;
-        await solflare.connect();
-        if (solflare.publicKey) {
-          isWaitingForUnlock = false;
-          handleWalletAuthorized(solflare, 'solflare', solflare.publicKey.toString());
-          showToast('เชื่อมต่อกระเป๋าสำเร็จ! 🚀');
-          return;
-        }
-      } catch (err) {
-        if (err.code !== 4001) {
-          showToast('Solflare: ' + (err.message || 'กรุณาใส่รหัสผ่านปลดล็อกกระเป๋า'), false);
-        }
-        return;
-      }
     } else {
+      // If not detected: check if running on file:/// protocol
+      const tipBox = document.getElementById('wallet-file-protocol-tip');
+      if (tipBox) {
+        tipBox.style.display = (window.location.protocol === 'file:') ? 'block' : 'none';
+      }
       openModal('wallet-fallback-modal');
     }
   }
