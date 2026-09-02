@@ -219,94 +219,18 @@
         BUILT ON SOLANA • LIVE WEB3 STAKING
       </div>
       <h1 class="hero-title hero-title-duel">
-        <!-- GREEN BONFIRE (BULL B) -->
-        <span class="bonfire-container bonfire-green">
-          <svg class="bonfire-flame-svg" viewBox="0 0 100 140" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="bf-green-grad" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="20%" stop-color="#86efac" />
-                <stop offset="50%" stop-color="#22c55e" />
-                <stop offset="80%" stop-color="#15803d" />
-                <stop offset="100%" stop-color="#052e16" stop-opacity="0" />
-              </linearGradient>
-              <linearGradient id="bf-green-mid" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="30%" stop-color="#4ade80" />
-                <stop offset="75%" stop-color="#16a34a" />
-                <stop offset="100%" stop-color="#15803d" stop-opacity="0" />
-              </linearGradient>
-              <linearGradient id="bf-green-core" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="60%" stop-color="#bbf7d0" />
-                <stop offset="100%" stop-color="#4ade80" />
-              </linearGradient>
-            </defs>
-            <!-- Wild Campfire Outer Tongues -->
-            <path class="bf-path-outer" fill="url(#bf-green-grad)" d="M50,0 C54,18 70,26 65,48 C76,38 84,52 80,68 C92,62 96,78 88,96 C98,102 96,118 84,130 C72,138 60,138 50,138 C40,138 28,138 16,130 C4,118 2,102 12,96 C4,78 8,62 20,68 C16,52 24,38 35,48 C30,26 46,18 50,0 Z" />
-            <!-- Active Mid Flame Tongues -->
-            <path class="bf-path-inner" fill="url(#bf-green-mid)" d="M50,22 C55,36 68,44 64,60 C73,54 78,64 74,76 C82,78 82,92 74,104 C66,118 58,124 50,124 C42,124 34,118 26,104 C18,92 18,78 26,76 C22,64 27,54 36,60 C32,44 45,36 50,22 Z" />
-            <!-- Intense White-Hot Core -->
-            <path class="bf-path-core" fill="url(#bf-green-core)" d="M50,55 C54,68 62,74 58,86 C64,90 62,102 56,110 C52,116 48,116 44,110 C38,102 36,90 42,86 C38,74 46,68 50,55 Z" />
-          </svg>
-          <span class="bonfire-sparks">
-            <span class="bf-spark spk-1"></span>
-            <span class="bf-spark spk-2"></span>
-            <span class="bf-spark spk-3"></span>
-            <span class="bf-spark spk-4"></span>
-          </span>
-          <span class="bonfire-b-text">B</span>
-          <!-- Front Licking Flame Tongues -->
-          <svg class="bonfire-front-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
-            <path class="bf-front-tongue-1" fill="url(#bf-green-mid)" opacity="0.85" d="M30,60 C33,42 42,32 38,15 C46,28 48,45 42,60 Z" />
-            <path class="bf-front-tongue-2" fill="url(#bf-green-mid)" opacity="0.8" d="M60,60 C64,44 72,35 68,20 C76,32 78,48 72,60 Z" />
-          </svg>
+        <!-- BULL B (CINEMATIC EMERALD BONFIRE) -->
+        <span class="bonfire-duel-box bull-flame-box">
+          <canvas class="bonfire-canvas" id="canvas-flame-bull"></canvas>
+          <span class="duel-char-b bull-b" data-letter="B">B</span>
         </span>
 
-        <span class="hero-o-core">o</span>
+        <span class="duel-char-o">o</span>
 
-        <!-- RED BONFIRE (BEAR B) -->
-        <span class="bonfire-container bonfire-red">
-          <svg class="bonfire-flame-svg" viewBox="0 0 100 140" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="bf-red-grad" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="20%" stop-color="#fde047" />
-                <stop offset="50%" stop-color="#ea580c" />
-                <stop offset="80%" stop-color="#dc2626" />
-                <stop offset="100%" stop-color="#7f1d1d" stop-opacity="0" />
-              </linearGradient>
-              <linearGradient id="bf-red-mid" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="30%" stop-color="#fb923c" />
-                <stop offset="75%" stop-color="#ef4444" />
-                <stop offset="100%" stop-color="#b91c1c" stop-opacity="0" />
-              </linearGradient>
-              <linearGradient id="bf-red-core" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="60%" stop-color="#fed7aa" />
-                <stop offset="100%" stop-color="#f97316" />
-              </linearGradient>
-            </defs>
-            <!-- Wild Campfire Outer Tongues -->
-            <path class="bf-path-outer" fill="url(#bf-red-grad)" d="M50,0 C54,18 70,26 65,48 C76,38 84,52 80,68 C92,62 96,78 88,96 C98,102 96,118 84,130 C72,138 60,138 50,138 C40,138 28,138 16,130 C4,118 2,102 12,96 C4,78 8,62 20,68 C16,52 24,38 35,48 C30,26 46,18 50,0 Z" />
-            <!-- Active Mid Flame Tongues -->
-            <path class="bf-path-inner" fill="url(#bf-red-mid)" d="M50,22 C55,36 68,44 64,60 C73,54 78,64 74,76 C82,78 82,92 74,104 C66,118 58,124 50,124 C42,124 34,118 26,104 C18,92 18,78 26,76 C22,64 27,54 36,60 C32,44 45,36 50,22 Z" />
-            <!-- Intense White-Hot Core -->
-            <path class="bf-path-core" fill="url(#bf-red-core)" d="M50,55 C54,68 62,74 58,86 C64,90 62,102 56,110 C52,116 48,116 44,110 C38,102 36,90 42,86 C38,74 46,68 50,55 Z" />
-          </svg>
-          <span class="bonfire-sparks">
-            <span class="bf-spark spk-1"></span>
-            <span class="bf-spark spk-2"></span>
-            <span class="bf-spark spk-3"></span>
-            <span class="bf-spark spk-4"></span>
-          </span>
-          <span class="bonfire-b-text">B</span>
-          <!-- Front Licking Flame Tongues -->
-          <svg class="bonfire-front-svg" viewBox="0 0 100 60" preserveAspectRatio="none">
-            <path class="bf-front-tongue-1" fill="url(#bf-red-mid)" opacity="0.85" d="M30,60 C33,42 42,32 38,15 C46,28 48,45 42,60 Z" />
-            <path class="bf-front-tongue-2" fill="url(#bf-red-mid)" opacity="0.8" d="M60,60 C64,44 72,35 68,20 C76,32 78,48 72,60 Z" />
-          </svg>
+        <!-- BEAR B (CINEMATIC CRIMSON BONFIRE) -->
+        <span class="bonfire-duel-box bear-flame-box">
+          <canvas class="bonfire-canvas" id="canvas-flame-bear"></canvas>
+          <span class="duel-char-b bear-b" data-letter="B">B</span>
         </span>
       </h1>
       <p class="hero-subtitle"><span class="text-green font-bold">BULL</span> <span class="text-dim">or</span> <span class="text-red font-bold">BEAR</span></p>
@@ -1070,7 +994,8 @@
     <span id="toast-text"></span>
   </div>
 
-  <!-- Main Script -->
+  <!-- Bonfire Particle Engine & Main Script -->
+  <script src="fire-engine.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
