@@ -3,19 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>BoB — Bull or Bear | Solana Meme Coin</title>
-  <meta name="description" content="BoB (Bull or Bear) — The ultimate GameFi Prediction Market on Solana. Choose your faction. Stake your claim. Enter the Arena." />
+  <title>BoB — Bull or Bear | Solana Meme Coin & GameFi</title>
+  <meta name="description" content="BoB (Bull or Bear) — The ultimate GameFi Prediction Market on Solana. Direct Web3 Wallet Connect, Live Staking, and Real-time Arena Battles." />
   <meta name="theme-color" content="#06060c" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
   <!-- GSAP + ScrollTrigger -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Solana Web3.js Official Library -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="style.css" />
@@ -23,7 +26,17 @@
 <body>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- ADMIN PROMO BANNER (hidden by default)      -->
+  <!-- EMERGENCY CIRCUIT BREAKER ALERT (If active) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="emergency-alert-banner" class="emergency-banner" style="display:none;">
+    <div class="emergency-banner-inner">
+      <span class="emergency-icon">🚨</span>
+      <span class="emergency-text"><strong>SECURITY ALERT:</strong> SYSTEM IS CURRENTLY IN EMERGENCY SAFE MODE. ALL STAKING AND ROUTING HALTED.</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ADMIN PROMO BANNER (Configurable)           -->
   <!-- ═══════════════════════════════════════════ -->
   <div id="promo-banner" class="promo-banner" style="display:none;">
     <div class="promo-banner-inner">
@@ -33,13 +46,13 @@
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- CA ADDRESS BANNER (hidden by default)       -->
+  <!-- CA ADDRESS BANNER (Configurable)            -->
   <!-- ═══════════════════════════════════════════ -->
   <div id="ca-banner" class="ca-banner" style="display:none;">
     <div class="ca-banner-inner">
       <span class="ca-banner-label">CA:</span>
       <code id="ca-banner-address" class="ca-banner-address"></code>
-      <button id="ca-copy-btn" class="ca-copy-btn" aria-label="Copy">📋</button>
+      <button id="ca-copy-btn" class="ca-copy-btn" aria-label="Copy">📋 Copy</button>
     </div>
   </div>
 
@@ -54,12 +67,12 @@
         <div id="loader-bar-fill" class="loader-bar-fill"></div>
       </div>
       <p id="loader-percent" class="loader-percent">0%</p>
-      <p class="loader-sub">LOADING THE ARENA...</p>
+      <p class="loader-sub">INITIALIZING SOLANA WEB3 ARENA...</p>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- SOUND TOGGLE (Fixed)                        -->
+  <!-- SOUND TOGGLE                                -->
   <!-- ═══════════════════════════════════════════ -->
   <audio id="bg-audio" loop preload="auto">
     <source src="Green_bull_and_red_bear_202608242043.mp4" type="video/mp4" />
@@ -89,16 +102,19 @@
       <div class="nav-links" id="nav-links">
         <a href="#about" class="nav-link">About</a>
         <a href="#factions" class="nav-link">Factions</a>
+        <a href="#staking" class="nav-link">Staking Arena</a>
         <a href="#mechanics" class="nav-link">Mechanics</a>
         <a href="#roadmap" class="nav-link">Roadmap</a>
+        <!-- Direct 1-Click Wallet Connect Button -->
         <button id="wallet-connect-btn" class="btn btn-wallet">
+          <span class="wallet-status-dot"></span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 10h4v4h-4z"/><circle cx="18" cy="12" r="1"/></svg>
           <span id="wallet-btn-text">Connect Wallet</span>
         </button>
       </div>
       <div class="nav-right-mobile">
         <button id="wallet-connect-btn-mobile" class="btn btn-wallet btn-wallet-mobile">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 10h4v4h-4z"/><circle cx="18" cy="12" r="1"/></svg>
+          <span class="wallet-status-dot"></span>
           <span id="wallet-btn-text-mobile">Connect</span>
         </button>
         <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
@@ -109,47 +125,38 @@
   </nav>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- WALLET CONNECT MODAL                        -->
+  <!-- WALLET FALLBACK MODAL (Only when no wallet)  -->
   <!-- ═══════════════════════════════════════════ -->
-  <div id="wallet-modal" class="modal-overlay" style="display:none;">
+  <div id="wallet-fallback-modal" class="modal-overlay" style="display:none;">
     <div class="modal wallet-modal">
       <div class="modal-header">
-        <h3 class="modal-title">Connect Wallet</h3>
-        <button class="modal-close" data-close="wallet-modal">✕</button>
+        <h3 class="modal-title">Install Solana Wallet</h3>
+        <button class="modal-close" data-close="wallet-fallback-modal">✕</button>
       </div>
-      <p class="modal-desc">Choose a wallet to connect to BoB Arena</p>
+      <p class="modal-desc">No Solana wallet detected in your browser. Install one of the following to connect to BoB:</p>
       <div class="wallet-options">
-        <button class="wallet-option" data-wallet="phantom">
+        <a href="https://phantom.app/" target="_blank" rel="noopener" class="wallet-option">
           <div class="wallet-option-icon">👻</div>
           <div class="wallet-option-info">
             <span class="wallet-option-name">Phantom</span>
-            <span class="wallet-option-status" id="phantom-status">Detected</span>
+            <span class="wallet-option-status">Most Popular for Solana</span>
           </div>
-          <span class="wallet-option-arrow">→</span>
-        </button>
-        <button class="wallet-option" data-wallet="solflare">
+          <span class="wallet-option-arrow">Install ↗</span>
+        </a>
+        <a href="https://solflare.com/" target="_blank" rel="noopener" class="wallet-option">
           <div class="wallet-option-icon">🌞</div>
           <div class="wallet-option-info">
             <span class="wallet-option-name">Solflare</span>
-            <span class="wallet-option-status">Popular</span>
+            <span class="wallet-option-status">Full Security Suite</span>
           </div>
-          <span class="wallet-option-arrow">→</span>
-        </button>
-        <button class="wallet-option" data-wallet="backpack">
-          <div class="wallet-option-icon">🎒</div>
-          <div class="wallet-option-info">
-            <span class="wallet-option-name">Backpack</span>
-            <span class="wallet-option-status">Multi-chain</span>
-          </div>
-          <span class="wallet-option-arrow">→</span>
-        </button>
+          <span class="wallet-option-arrow">Install ↗</span>
+        </a>
       </div>
-      <p class="wallet-disclaimer">By connecting, you agree to the Terms of Service</p>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- WALLET INFO MODAL (after connected)         -->
+  <!-- WALLET INFO MODAL (When clicked while connected) -->
   <!-- ═══════════════════════════════════════════ -->
   <div id="wallet-info-modal" class="modal-overlay" style="display:none;">
     <div class="modal wallet-info-modal">
@@ -159,18 +166,21 @@
       </div>
       <div class="wallet-info-content">
         <div class="wallet-info-address">
-          <span class="wallet-info-label">Address</span>
+          <span class="wallet-info-label">Solana Public Address</span>
           <code id="wallet-display-address">—</code>
         </div>
         <div class="wallet-info-balance">
           <div class="wallet-balance-item">
-            <span class="wallet-balance-label">SOL Balance</span>
-            <span class="wallet-balance-value" id="wallet-sol-balance">—</span>
+            <span class="wallet-balance-label">Live SOL Balance</span>
+            <span class="wallet-balance-value" id="wallet-sol-balance">0.00 SOL</span>
           </div>
           <div class="wallet-balance-item">
-            <span class="wallet-balance-label">$BoB Balance</span>
-            <span class="wallet-balance-value wallet-balance-bob" id="wallet-bob-balance">—</span>
+            <span class="wallet-balance-label">$BoB Token Balance</span>
+            <span class="wallet-balance-value wallet-balance-bob" id="wallet-bob-balance">0 BoB</span>
           </div>
+        </div>
+        <div class="wallet-network-tag">
+          <span class="network-dot"></span> Connected to Solana Mainnet
         </div>
         <button id="wallet-disconnect-btn" class="btn btn-ghost btn-disconnect">Disconnect Wallet</button>
       </div>
@@ -178,7 +188,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- HERO SECTION — Video Background              -->
+  <!-- HERO SECTION                                -->
   <!-- ═══════════════════════════════════════════ -->
   <section id="hero" class="hero">
     <div class="hero-video-wrap">
@@ -191,7 +201,7 @@
     <div class="hero-content" data-anim="hero">
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
-        BUILT ON SOLANA
+        BUILT ON SOLANA • LIVE WEB3 STAKING
       </div>
       <h1 class="hero-title">
         B<span class="text-green">o</span>B
@@ -206,7 +216,7 @@
         </a>
         <a href="#about" class="btn btn-ghost">Learn More</a>
         <!-- Game Button (admin controlled, hidden by default) -->
-        <a href="#" id="game-entry-btn" class="btn btn-game" style="display:none;">
+        <a href="#" id="game-entry-btn" class="btn btn-game" style="display:none;" target="_blank" rel="noopener">
           <span class="btn-shimmer"></span>
           🎮 Play Now
         </a>
@@ -224,8 +234,8 @@
         </div>
         <div class="hero-stat-divider"></div>
         <div class="hero-stat">
-          <span class="hero-stat-value">∞</span>
-          <span class="hero-stat-label">Possibilities</span>
+          <span class="hero-stat-value" id="hero-stakers-count">100%</span>
+          <span class="hero-stat-label">On-Chain</span>
         </div>
       </div>
     </div>
@@ -381,22 +391,27 @@
   </section>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- STAKING SECTION                              -->
+  <!-- REAL STAKING ARENA SECTION                   -->
   <!-- ═══════════════════════════════════════════ -->
   <section id="staking" class="staking-section">
     <div class="container">
       <div class="section-header" data-anim="up">
-        <p class="section-tag">THE ARENA</p>
-        <h2 class="section-title">STAKE YOUR <span class="text-gradient">$BoB</span></h2>
+        <p class="section-tag">ON-CHAIN PREDICTION ARENA</p>
+        <h2 class="section-title">STAKE &amp; PREDICT <span class="text-gradient">SOLANA</span></h2>
         <div class="section-divider"></div>
       </div>
 
       <div class="staking-card" data-anim="up">
+        <!-- Emergency Halt Banner inside Staking if active -->
+        <div id="staking-halted-banner" class="staking-halted-notice" style="display:none;">
+          ⚠️ Staking is temporarily paused by Admin Security Protocol.
+        </div>
+
         <!-- Not connected state -->
         <div id="staking-not-connected" class="staking-state">
           <div class="staking-lock-icon">🔒</div>
-          <h3 class="staking-state-title">Connect Your Wallet</h3>
-          <p class="staking-state-desc">Connect your Solana wallet to start staking $BoB and enter the prediction arena.</p>
+          <h3 class="staking-state-title">Connect Wallet to Enter</h3>
+          <p class="staking-state-desc">Directly connect your Phantom or Solflare wallet to start staking $BoB in the live arena.</p>
           <button id="staking-connect-btn" class="btn btn-primary">
             <span class="btn-shimmer"></span>
             Connect Wallet
@@ -405,51 +420,54 @@
 
         <!-- Connected state -->
         <div id="staking-connected" class="staking-state" style="display:none;">
-          <!-- Balance Bar -->
+          <!-- Balance Bar (Real Live Data) -->
           <div class="staking-balance-bar">
             <div class="staking-balance-item">
-              <span class="staking-balance-label">Available</span>
-              <span class="staking-balance-value" id="staking-available">0 BoB</span>
+              <span class="staking-balance-label">Wallet SOL</span>
+              <span class="staking-balance-value" id="staking-available">0.00 SOL</span>
             </div>
             <div class="staking-balance-sep"></div>
             <div class="staking-balance-item">
-              <span class="staking-balance-label">Staked</span>
-              <span class="staking-balance-value staking-staked-val" id="staking-staked">0 BoB</span>
+              <span class="staking-balance-label">Total Staked</span>
+              <span class="staking-balance-value staking-staked-val" id="staking-staked">0.00 SOL</span>
             </div>
             <div class="staking-balance-sep"></div>
             <div class="staking-balance-item">
-              <span class="staking-balance-label">Rewards</span>
-              <span class="staking-balance-value staking-rewards-val" id="staking-rewards">0 BoB</span>
+              <span class="staking-balance-label">Rewards Pool</span>
+              <span class="staking-balance-value staking-rewards-val" id="staking-rewards">+0.00 SOL</span>
             </div>
           </div>
 
           <!-- Faction Choose -->
           <div class="staking-faction-choose">
-            <p class="staking-faction-label">Choose Your Faction</p>
+            <p class="staking-faction-label">Select Your Prediction Faction</p>
             <div class="staking-faction-btns">
               <button class="staking-faction-btn staking-faction-bull active" data-side="bull">
                 <span class="staking-faction-emoji">🐂</span>
-                <span>BULL</span>
+                <span>BULL (SOL UP)</span>
               </button>
               <button class="staking-faction-btn staking-faction-bear" data-side="bear">
                 <span class="staking-faction-emoji">🐻</span>
-                <span>BEAR</span>
+                <span>BEAR (SOL DOWN)</span>
               </button>
             </div>
           </div>
 
           <!-- Stake Input -->
           <div class="staking-input-group">
-            <label class="staking-input-label">Amount to Stake</label>
+            <div class="staking-input-label-row">
+              <label class="staking-input-label">Stake Amount (SOL)</label>
+              <span class="staking-vault-notice" id="staking-vault-notice">Vault: Active</span>
+            </div>
             <div class="staking-input-wrap">
-              <input type="number" id="staking-amount" class="staking-input" placeholder="0.00" min="0" step="any" />
+              <input type="number" id="staking-amount" class="staking-input" placeholder="0.05" min="0.01" step="0.01" />
               <button id="staking-max-btn" class="staking-max-btn">MAX</button>
             </div>
             <div class="staking-quick-amounts">
-              <button class="staking-quick-btn" data-pct="25">25%</button>
-              <button class="staking-quick-btn" data-pct="50">50%</button>
-              <button class="staking-quick-btn" data-pct="75">75%</button>
-              <button class="staking-quick-btn" data-pct="100">100%</button>
+              <button class="staking-quick-btn" data-val="0.05">0.05 SOL</button>
+              <button class="staking-quick-btn" data-val="0.1">0.1 SOL</button>
+              <button class="staking-quick-btn" data-val="0.5">0.5 SOL</button>
+              <button class="staking-quick-btn" data-val="1">1.0 SOL</button>
             </div>
           </div>
 
@@ -457,23 +475,27 @@
           <div class="staking-actions">
             <button id="stake-btn" class="btn btn-primary staking-action-btn">
               <span class="btn-shimmer"></span>
-              ⚡ Stake
+              ⚡ Sign &amp; Stake
             </button>
-            <button id="unstake-btn" class="btn btn-ghost staking-action-btn">Unstake</button>
+            <button id="unstake-btn" class="btn btn-ghost staking-action-btn">Claim Rewards</button>
           </div>
 
-          <!-- Staking Info -->
+          <!-- Staking Info & Live Status -->
           <div class="staking-info-row">
             <span>Current Round</span>
-            <span class="staking-info-value">#42</span>
+            <span class="staking-info-value" id="staking-round-num">#88 (Live)</span>
           </div>
           <div class="staking-info-row">
-            <span>Round Ends In</span>
+            <span>Round Closes In</span>
             <span class="staking-info-value staking-timer" id="staking-timer">05:32:18</span>
           </div>
           <div class="staking-info-row">
-            <span>Total Pool</span>
-            <span class="staking-info-value">2,450,000 BoB</span>
+            <span>Approval Mode</span>
+            <span class="staking-info-value" id="staking-mode-display">⚡ Auto Instant</span>
+          </div>
+          <div class="staking-info-row">
+            <span>Staking Vault Destination</span>
+            <code class="staking-info-vault" id="staking-vault-display">Default Treasury</code>
           </div>
         </div>
       </div>
@@ -496,25 +518,25 @@
           <div class="mechanic-number">01</div>
           <div class="mechanic-icon">🎯</div>
           <h4 class="mechanic-title">Stake to Play</h4>
-          <p class="mechanic-desc">Lock your $BoB tokens in the Arena. The more you stake, the more voting power you wield. 1 BoB = 1 Vote.</p>
+          <p class="mechanic-desc">Lock your stake directly in the BoB Arena vault. Every stake gives you weighted prediction power in the battle.</p>
         </div>
         <div class="mechanic-card" data-anim="up" style="--delay: 1">
           <div class="mechanic-number">02</div>
           <div class="mechanic-icon">⚖️</div>
           <h4 class="mechanic-title">Predict &amp; Win</h4>
-          <p class="mechanic-desc">Predict SOL price direction each round. Winners take 8% of the losers' staked pool as a bonus reward.</p>
+          <p class="mechanic-desc">Predict SOL price trend. Winners take 8% of the opposing side's staked pool as instant yield bonuses.</p>
         </div>
         <div class="mechanic-card" data-anim="up" style="--delay: 2">
           <div class="mechanic-number">03</div>
           <div class="mechanic-icon">🔥</div>
           <h4 class="mechanic-title">Deflationary Burn</h4>
-          <p class="mechanic-desc">1% of every losing pool is burned forever. Supply shrinks. Value rises. The cycle continues.</p>
+          <p class="mechanic-desc">1% of every losing pool is routed to the official burn address. Supply shrinks forever.</p>
         </div>
         <div class="mechanic-card" data-anim="up" style="--delay: 3">
           <div class="mechanic-number">04</div>
           <div class="mechanic-icon">♻️</div>
           <h4 class="mechanic-title">Auto Buyback</h4>
-          <p class="mechanic-desc">Vote fees (1 USD in SOL) automatically buy back $BoB from the market — constant buy pressure, every round.</p>
+          <p class="mechanic-desc">Configured buyback routing pumps market buy pressure automatically every round.</p>
         </div>
       </div>
 
@@ -524,20 +546,20 @@
         <p class="slash-subtitle">When a round ends, the losing side gets slashed 10% of their staked pool:</p>
         <div class="slash-grid">
           <div class="slash-item slash-green">
-            <span class="slash-pct">8%</span>
+            <span class="slash-pct" id="route-display-winner">8%</span>
             <span class="slash-label">Winners Pool<br/><small>Distributed as bonus</small></span>
           </div>
           <div class="slash-item slash-orange">
-            <span class="slash-pct">1%</span>
+            <span class="slash-pct" id="route-display-burn">1%</span>
             <span class="slash-label">Burned Forever<br/><small>Deflationary mechanism</small></span>
           </div>
           <div class="slash-item slash-blue">
-            <span class="slash-pct">0.5%</span>
-            <span class="slash-label">Dev &amp; Maintenance<br/><small>Keeps the engine running</small></span>
+            <span class="slash-pct" id="route-display-dev">0.5%</span>
+            <span class="slash-label">Dev &amp; Maintenance<br/><small>Keeps engine running</small></span>
           </div>
           <div class="slash-item slash-purple">
-            <span class="slash-pct">0.5%</span>
-            <span class="slash-label">Network Fees<br/><small>Transaction costs</small></span>
+            <span class="slash-pct" id="route-display-buyback">0.5%</span>
+            <span class="slash-label">Buyback Reserve<br/><small>Supports floor price</small></span>
           </div>
         </div>
       </div>
@@ -564,9 +586,9 @@
             <div class="roadmap-phase">Q1</div>
             <h4 class="roadmap-title">Launch &amp; Foundation</h4>
             <ul class="roadmap-list">
-              <li>Create 3D Assets &amp; Image Sequence</li>
-              <li>Build Web3 Landing Page</li>
-              <li>Launch token on Pump.fun</li>
+              <li>Create 3D Assets &amp; Video Backgrounds</li>
+              <li>Build Web3 Landing Page with Phantom Connect</li>
+              <li>Launch token on Pump.fun / Raydium</li>
               <li>"Which Side are You On?" Campaign</li>
             </ul>
           </div>
@@ -578,10 +600,10 @@
             <div class="roadmap-phase">Q2</div>
             <h4 class="roadmap-title">BoB Arena V1</h4>
             <ul class="roadmap-list">
-              <li>Launch DApp "BoB Arena"</li>
-              <li>Wallet Connection &amp; Staking</li>
-              <li>Voting Mechanics &amp; Auto Buyback</li>
-              <li>Diamond Hands Leaderboard</li>
+              <li>On-chain Staking Vault &amp; Direct Transfer</li>
+              <li>Token Routing Engine &amp; Auto Buyback</li>
+              <li>Emergency Circuit Breaker Protocols</li>
+              <li>Leaderboard of Top Predictors</li>
             </ul>
           </div>
         </div>
@@ -593,7 +615,7 @@
             <h4 class="roadmap-title">Expansion &amp; DeFi</h4>
             <ul class="roadmap-list">
               <li>CEX Listings</li>
-              <li>Raydium Liquidity Pool</li>
+              <li>Raydium Liquidity Pool Staking</li>
               <li>"BoB Gladiators" NFT Collection</li>
             </ul>
           </div>
@@ -605,9 +627,9 @@
             <div class="roadmap-phase">Q4</div>
             <h4 class="roadmap-title">Ultimate Ecosystem</h4>
             <ul class="roadmap-list">
-              <li>DAO Governance</li>
-              <li>Telegram Mini-game Bot</li>
-              <li>Cross-chain Bridge</li>
+              <li>DAO Governance &amp; Multi-sig Vaults</li>
+              <li>Telegram Mini-game Bot with Web3 wallet</li>
+              <li>Cross-chain Prediction Expansion</li>
             </ul>
           </div>
         </div>
@@ -631,7 +653,7 @@
       <a href="#staking" class="btn btn-primary btn-lg">
         <span class="btn-shimmer"></span>
         ENTER BoB ARENA
-        <small class="btn-sub">(STAKE NOW)</small>
+        <small class="btn-sub">(CONNECT &amp; STAKE)</small>
       </a>
 
       <div class="cta-socials">
@@ -660,15 +682,16 @@
       <div class="footer-links">
         <a href="#about">About</a>
         <a href="#factions">Factions</a>
+        <a href="#staking">Staking Arena</a>
         <a href="#mechanics">Mechanics</a>
         <a href="#roadmap">Roadmap</a>
       </div>
       <div class="footer-bottom">
         <p class="footer-text">© 2026 BoB (Bull or Bear) — Built on Solana</p>
-        <p class="footer-disclaimer">This is a meme coin. Not financial advice. DYOR.</p>
+        <p class="footer-disclaimer">Decentralized Web3 GameFi Prediction Market. DYOR.</p>
       </div>
-      <!-- Admin Entry (hidden trigger) -->
-      <button id="admin-trigger" class="admin-trigger" aria-label="Admin">🔐</button>
+      <!-- Hidden Admin Trigger Icon -->
+      <button id="admin-trigger" class="admin-trigger" aria-label="Admin Control" title="Admin Control Suite">🔐</button>
     </div>
   </footer>
 
@@ -678,78 +701,225 @@
   <div id="admin-login-modal" class="modal-overlay" style="display:none;">
     <div class="modal admin-login-modal">
       <div class="modal-header">
-        <h3 class="modal-title">🔐 Admin Access</h3>
+        <h3 class="modal-title">🔐 Admin Master Access</h3>
         <button class="modal-close" data-close="admin-login-modal">✕</button>
       </div>
       <div class="admin-login-form">
-        <label class="admin-label">Enter Password</label>
+        <label class="admin-label">Master Password</label>
         <input type="password" id="admin-password" class="admin-input" placeholder="••••••••" autocomplete="off" />
         <p id="admin-login-error" class="admin-error" style="display:none;">Incorrect password</p>
         <button id="admin-login-btn" class="btn btn-primary" style="width:100%; margin-top:1rem;">
           <span class="btn-shimmer"></span>
-          Login
+          Authenticate
         </button>
       </div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- ADMIN PANEL MODAL                            -->
+  <!-- FULL ADMIN CONTROL SUITE (Multi-tab)         -->
   <!-- ═══════════════════════════════════════════ -->
   <div id="admin-panel-modal" class="modal-overlay" style="display:none;">
-    <div class="modal admin-panel-modal">
+    <div class="modal admin-panel-modal admin-suite-modal">
       <div class="modal-header">
-        <h3 class="modal-title">⚙️ Admin Panel</h3>
+        <div class="admin-header-title">
+          <h3 class="modal-title">⚡ BoB Web3 Master Control Suite</h3>
+          <span class="admin-badge-solana">Solana Mainnet</span>
+        </div>
         <button class="modal-close" data-close="admin-panel-modal">✕</button>
       </div>
-      <div class="admin-panel-content">
 
-        <!-- CA Address -->
-        <div class="admin-group">
-          <label class="admin-label">📋 Contract Address (CA)</label>
-          <div class="admin-row">
-            <input type="text" id="admin-ca-input" class="admin-input" placeholder="Enter contract address..." />
-            <button id="admin-ca-toggle" class="admin-toggle-btn">Show</button>
-          </div>
-          <small class="admin-hint">Display a CA address banner on the website</small>
-        </div>
-
-        <!-- Promo Message -->
-        <div class="admin-group">
-          <label class="admin-label">📢 Promo / Announcement</label>
-          <div class="admin-row">
-            <input type="text" id="admin-promo-input" class="admin-input" placeholder="Enter promo message..." />
-            <button id="admin-promo-toggle" class="admin-toggle-btn">Show</button>
-          </div>
-          <small class="admin-hint">Display a promotional banner at the top</small>
-        </div>
-
-        <!-- Game Entry Button -->
-        <div class="admin-group">
-          <label class="admin-label">🎮 Game Entry Button</label>
-          <div class="admin-row">
-            <input type="url" id="admin-game-url" class="admin-input" placeholder="https://game-url.com" />
-            <button id="admin-game-toggle" class="admin-toggle-btn">Show</button>
-          </div>
-          <small class="admin-hint">Show a "Play Now" button in the hero section</small>
-        </div>
-
-        <!-- Hero Tagline -->
-        <div class="admin-group">
-          <label class="admin-label">✏️ Hero Tagline</label>
-          <input type="text" id="admin-tagline-input" class="admin-input" placeholder="The Ultimate GameFi Prediction Market" />
-          <button id="admin-tagline-save" class="btn btn-ghost" style="width:100%; margin-top:0.5rem;">Update Tagline</button>
-        </div>
-
-        <!-- Save & Logout -->
-        <div class="admin-actions">
-          <button id="admin-save-btn" class="btn btn-primary" style="flex:1;">
-            <span class="btn-shimmer"></span>
-            💾 Save All
-          </button>
-          <button id="admin-logout-btn" class="btn btn-ghost btn-danger" style="flex:1;">🚪 Logout</button>
-        </div>
+      <!-- Admin Navigation Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="tab-general">🖥️ General &amp; Display</button>
+        <button class="admin-tab" data-tab="tab-vault">🏦 Staking Vault</button>
+        <button class="admin-tab" data-tab="tab-routing">🛣️ Token Routing</button>
+        <button class="admin-tab" data-tab="tab-security">🚨 Emergency &amp; Security</button>
+        <button class="admin-tab" data-tab="tab-wallets">👥 Connected Wallets (<span id="admin-wallets-badge">0</span>)</button>
       </div>
+
+      <div class="admin-tab-contents">
+
+        <!-- TAB 1: GENERAL & DISPLAY -->
+        <div class="admin-tab-pane active" id="tab-general">
+          <div class="admin-group">
+            <label class="admin-label">📋 Token Contract Address (CA)</label>
+            <div class="admin-row">
+              <input type="text" id="admin-ca-input" class="admin-input" placeholder="Solana Mint Address..." />
+              <button id="admin-ca-toggle" class="admin-toggle-btn">Show</button>
+            </div>
+            <small class="admin-hint">Displays bottom CA address banner with one-click copy</small>
+          </div>
+
+          <div class="admin-group">
+            <label class="admin-label">📢 Promo / Announcement Banner</label>
+            <div class="admin-row">
+              <input type="text" id="admin-promo-input" class="admin-input" placeholder="Announcement text..." />
+              <button id="admin-promo-toggle" class="admin-toggle-btn">Show</button>
+            </div>
+            <small class="admin-hint">Displays announcement banner at top of site</small>
+          </div>
+
+          <div class="admin-group">
+            <label class="admin-label">🎮 Game Entry URL &amp; Play Button</label>
+            <div class="admin-row">
+              <input type="url" id="admin-game-url" class="admin-input" placeholder="https://game.bob-arena.com" />
+              <button id="admin-game-toggle" class="admin-toggle-btn">Show</button>
+            </div>
+            <small class="admin-hint">Enables "Play Now" button in hero actions</small>
+          </div>
+
+          <div class="admin-group">
+            <label class="admin-label">✏️ Hero Headline Tagline</label>
+            <input type="text" id="admin-tagline-input" class="admin-input" placeholder="The Ultimate GameFi Prediction Market" />
+          </div>
+        </div>
+
+        <!-- TAB 2: STAKING VAULT & APPROVALS -->
+        <div class="admin-tab-pane" id="tab-vault">
+          <div class="admin-group">
+            <label class="admin-label">🏦 Staking Vault Receiving Wallet (Public Key)</label>
+            <input type="text" id="admin-vault-input" class="admin-input admin-mono" placeholder="Enter Solana wallet address to receive stakes..." />
+            <small class="admin-hint">Staked funds transferred by users will be sent directly to this address.</small>
+          </div>
+
+          <div class="admin-group">
+            <label class="admin-label">⚡ Round Payout Mode</label>
+            <div class="admin-radio-group">
+              <label class="admin-radio-label">
+                <input type="radio" name="payout-mode" value="auto" id="payout-mode-auto" checked />
+                <span class="admin-radio-custom"></span>
+                <div>
+                  <strong>⚡ Automatic Payouts</strong>
+                  <p>Winners pool bonus distributed automatically when round concludes.</p>
+                </div>
+              </label>
+              <label class="admin-radio-label">
+                <input type="radio" name="payout-mode" value="manual" id="payout-mode-manual" />
+                <span class="admin-radio-custom"></span>
+                <div>
+                  <strong>🛡️ Manual Admin Approval Required</strong>
+                  <p>All claims &amp; distributions require your manual review and approval.</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="admin-group">
+            <label class="admin-label">⏸️ Staking Pool State</label>
+            <div class="admin-toggle-row">
+              <span>Pause incoming stakes</span>
+              <button id="admin-pause-staking-toggle" class="admin-toggle-btn">Active</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: TOKEN ROUTING ENGINE -->
+        <div class="admin-tab-pane" id="tab-routing">
+          <p class="admin-tab-desc">Configure the destination wallets and percentages for round pool distribution:</p>
+          
+          <div class="admin-grid-2">
+            <div class="admin-group">
+              <label class="admin-label">🏆 Winners Pool Share (%)</label>
+              <input type="number" id="route-winner-pct" class="admin-input" value="8" min="0" max="100" />
+            </div>
+            <div class="admin-group">
+              <label class="admin-label">🔥 Burn Share (%) &amp; Burn Address</label>
+              <input type="number" id="route-burn-pct" class="admin-input" value="1" min="0" max="100" />
+              <input type="text" id="route-burn-addr" class="admin-input admin-mono" value="11111111111111111111111111111111" />
+            </div>
+          </div>
+
+          <div class="admin-grid-2">
+            <div class="admin-group">
+              <label class="admin-label">🛠️ Dev &amp; Maintenance Wallet (%)</label>
+              <input type="number" id="route-dev-pct" class="admin-input" value="0.5" step="0.1" min="0" max="100" />
+              <input type="text" id="route-dev-addr" class="admin-input admin-mono" placeholder="Dev Solana wallet..." />
+            </div>
+            <div class="admin-group">
+              <label class="admin-label">♻️ Buyback Reserve Wallet (%)</label>
+              <input type="number" id="route-buyback-pct" class="admin-input" value="0.5" step="0.1" min="0" max="100" />
+              <input type="text" id="route-buyback-addr" class="admin-input admin-mono" placeholder="Buyback treasury wallet..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: EMERGENCY & SECURITY -->
+        <div class="admin-tab-pane" id="tab-security">
+          <div class="admin-danger-box">
+            <h4>🚨 Emergency Security Hub</h4>
+            <p>If the system is under attack or malfunction, activate the Emergency Circuit Breaker immediately.</p>
+            
+            <div class="admin-group" style="margin-top:1rem;">
+              <label class="admin-label">🛡️ Cold / Safe Wallet Address (Destination of Safety)</label>
+              <input type="text" id="admin-safe-wallet" class="admin-input admin-mono" placeholder="Solana cold wallet public key..." />
+              <small class="admin-hint">All funds will be diverted here in an emergency.</small>
+            </div>
+
+            <div class="admin-circuit-breaker-row">
+              <div>
+                <strong>Circuit Breaker Protocol</strong>
+                <p>Freezes all front-end staking transactions &amp; shows emergency notice</p>
+              </div>
+              <button id="admin-circuit-breaker-btn" class="btn btn-danger">Halt System</button>
+            </div>
+          </div>
+
+          <div class="admin-group" style="margin-top:1.5rem;">
+            <label class="admin-label">📜 Emergency Custom Script / Recovery Hook (JS)</label>
+            <textarea id="admin-emergency-script" class="admin-textarea admin-mono" rows="4" placeholder="// Paste Web3 recovery script here. Variables available: solanaWeb3, connection, safeWallet..."></textarea>
+            <div class="admin-script-actions">
+              <button id="admin-run-script-btn" class="btn btn-ghost">▶️ Run Emergency Script</button>
+              <small class="admin-hint">Executes directly in sandbox with Web3 context</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: CONNECTED WALLETS LIVE MONITOR -->
+        <div class="admin-tab-pane" id="tab-wallets">
+          <div class="admin-wallets-header">
+            <div>
+              <h4>Live Connected Users &amp; Assets</h4>
+              <p>Real-time list of wallets interacting with BoB Arena:</p>
+            </div>
+            <div class="admin-wallets-btns">
+              <button id="admin-refresh-wallets-btn" class="btn btn-ghost btn-sm">🔄 Refresh RPC Data</button>
+              <button id="admin-export-wallets-btn" class="btn btn-ghost btn-sm">📥 Export JSON</button>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Wallet Address</th>
+                  <th>Network</th>
+                  <th>SOL Balance</th>
+                  <th>Staked Value</th>
+                  <th>Faction</th>
+                  <th>Last Seen</th>
+                </tr>
+              </thead>
+              <tbody id="admin-wallets-tbody">
+                <tr>
+                  <td colspan="6" class="admin-table-empty">No external wallets recorded yet. Connect a wallet to test.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="admin-actions-bar">
+        <button id="admin-save-all-btn" class="btn btn-primary">
+          <span class="btn-shimmer"></span>
+          💾 Save Master Settings
+        </button>
+        <button id="admin-logout-btn" class="btn btn-ghost btn-danger">🚪 Logout</button>
+      </div>
+
     </div>
   </div>
 
