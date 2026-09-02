@@ -128,8 +128,63 @@
     <div id="arena-not-connected" class="arena-gate">
       <div class="arena-gate-inner">
         <img src="logo.jpeg" alt="BoB" class="arena-gate-logo" />
-        <h1 class="arena-gate-title"><span class="hero-b-bull fire-green" data-text="B">B</span><span class="hero-o-core">o</span><span class="hero-b-bear fire-red" data-text="B">B</span> <span class="text-dim">ARENA</span></h1>
-        <p class="arena-gate-subtitle">Stake $BoB • Predict SOL • Dominate the Round</p>
+        <h1 class="arena-gate-title">
+          <span class="bonfire-container bonfire-green">
+            <svg class="bonfire-flame-svg" viewBox="0 0 100 130" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="bf-arena-green" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="25%" stop-color="#a7f3d0" />
+                  <stop offset="60%" stop-color="#10b981" />
+                  <stop offset="90%" stop-color="#047857" />
+                </linearGradient>
+                <linearGradient id="bf-arena-green-in" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="35%" stop-color="#34d399" />
+                  <stop offset="100%" stop-color="#059669" />
+                </linearGradient>
+              </defs>
+              <path class="bf-path-outer" fill="url(#bf-arena-green)" d="M50,2 C56,22 74,32 68,55 C82,45 89,62 85,78 C95,72 98,88 90,104 C78,124 65,128 50,128 C35,128 22,124 10,104 C2,88 5,72 15,78 C11,62 18,45 32,55 C26,32 44,22 50,2 Z" />
+              <path class="bf-path-inner" fill="url(#bf-arena-green-in)" d="M50,28 C54,42 66,52 62,68 C71,62 75,72 72,84 C66,98 58,108 50,108 C42,108 34,98 28,84 C25,72 29,62 38,68 C34,52 46,42 50,28 Z" />
+              <path class="bf-path-core" fill="#ffffff" opacity="0.9" d="M50,60 C53,70 60,78 57,88 C54,98 46,98 43,88 C40,78 47,70 50,60 Z" />
+            </svg>
+            <span class="bonfire-sparks">
+              <span class="bf-spark spk-1"></span>
+              <span class="bf-spark spk-2"></span>
+            </span>
+            <span class="bonfire-b-text">B</span>
+          </span>
+
+          <span class="hero-o-core">o</span>
+
+          <span class="bonfire-container bonfire-red">
+            <svg class="bonfire-flame-svg" viewBox="0 0 100 130" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="bf-arena-red" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="25%" stop-color="#fed7aa" />
+                  <stop offset="60%" stop-color="#ea580c" />
+                  <stop offset="90%" stop-color="#b91c1c" />
+                </linearGradient>
+                <linearGradient id="bf-arena-red-in" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="35%" stop-color="#fb923c" />
+                  <stop offset="100%" stop-color="#dc2626" />
+                </linearGradient>
+              </defs>
+              <path class="bf-path-outer" fill="url(#bf-arena-red)" d="M50,2 C56,22 74,32 68,55 C82,45 89,62 85,78 C95,72 98,88 90,104 C78,124 65,128 50,128 C35,128 22,124 10,104 C2,88 5,72 15,78 C11,62 18,45 32,55 C26,32 44,22 50,2 Z" />
+              <path class="bf-path-inner" fill="url(#bf-arena-red-in)" d="M50,28 C54,42 66,52 62,68 C71,62 75,72 72,84 C66,98 58,108 50,108 C42,108 34,98 28,84 C25,72 29,62 38,68 C34,52 46,42 50,28 Z" />
+              <path class="bf-path-core" fill="#ffffff" opacity="0.9" d="M50,60 C53,70 60,78 57,88 C54,98 46,98 43,88 C40,78 47,70 50,60 Z" />
+            </svg>
+            <span class="bonfire-sparks">
+              <span class="bf-spark spk-1"></span>
+              <span class="bf-spark spk-2"></span>
+            </span>
+            <span class="bonfire-b-text">B</span>
+          </span>
+          <span class="text-dim">ARENA</span>
+        </h1>
+        <p class="arena-gate-subtitle"><span class="text-green font-bold">BULL</span> <span class="text-dim">or</span> <span class="text-red font-bold">BEAR</span> • Dominate the Round</p>
         <p class="arena-gate-desc">Connect your Solana wallet to enter the prediction battlefield. Stake your $BoB tokens, choose Bull or Bear, and battle for the winners pool.</p>
         <button id="arena-gate-connect" class="btn btn-primary btn-lg">
           <span class="btn-shimmer"></span>
