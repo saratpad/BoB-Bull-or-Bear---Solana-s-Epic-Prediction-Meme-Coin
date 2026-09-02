@@ -175,18 +175,18 @@
 
 .arena-gate-title .bonfire-canvas {
   position: absolute;
-  bottom: -12%;
+  bottom: -6%;
   left: 50%;
   transform: translateX(-50%);
-  width: 250%;
-  height: 220%;
+  width: 145%;
+  height: 145%;
   pointer-events: none;
   z-index: 2;
 }
 
 .arena-gate-title .duel-char-b {
   position: relative;
-  z-index: 5;
+  z-index: 10;
   font-family: 'Orbitron', monospace;
   font-size: clamp(2.8rem, 6.5vw, 4.2rem);
   font-weight: 950;
@@ -194,15 +194,15 @@
   letter-spacing: -0.02em;
 }
 
-/* 🟢 BULL 'B' — ARENA CHISELED EMERALD */
+/* 🟢 BULL 'B' — PURE VIBRANT EMERALD GREEN */
 .arena-gate-title .bull-b {
+  color: #00ff88;
   background: linear-gradient(
     180deg,
-    #ffffff 0%,
-    #a7f3d0 8%,
-    #00ff88 32%,
+    #a7f3d0 0%,
+    #00ff88 28%,
     #10b981 60%,
-    #047857 82%,
+    #059669 85%,
     #022c22 100%
   );
   -webkit-background-clip: text;
@@ -210,21 +210,21 @@
   -webkit-text-fill-color: transparent;
   transform: skewX(-4deg);
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9),
-    0 2px 4px rgba(0, 255, 136, 0.8),
-    0 3px 8px rgba(0, 0, 0, 0.95);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.85));
+    0 0 14px rgba(0, 255, 136, 0.75),
+    0 2px 4px rgba(0, 255, 136, 0.9),
+    0 4px 10px rgba(0, 0, 0, 0.95);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
 }
 
-/* 🔴 BEAR 'B' — ARENA CHISELED CRIMSON */
+/* 🔴 BEAR 'B' — PURE VIBRANT CRIMSON RED */
 .arena-gate-title .bear-b {
+  color: #ff2200;
   background: linear-gradient(
     180deg,
-    #ffffff 0%,
-    #fed7aa 8%,
-    #ff4400 32%,
+    #fca5a5 0%,
+    #ff2200 28%,
     #ef4444 60%,
-    #b91c1c 82%,
+    #b91c1c 85%,
     #450a0a 100%
   );
   -webkit-background-clip: text;
@@ -232,10 +232,10 @@
   -webkit-text-fill-color: transparent;
   transform: skewX(4deg);
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.9),
-    0 2px 4px rgba(255, 68, 0, 0.8),
-    0 3px 8px rgba(0, 0, 0, 0.95);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.85));
+    0 0 14px rgba(255, 34, 0, 0.75),
+    0 2px 4px rgba(255, 68, 0, 0.9),
+    0 4px 10px rgba(0, 0, 0, 0.95);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
 }
 
 .arena-gate-title .duel-char-o {
