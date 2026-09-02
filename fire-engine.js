@@ -1,45 +1,42 @@
 /**
- * BoB — Tier-1 AAA Cyber Aurora & Stardust Sparkle Engine
- * Ultra-luxury particle & aura simulation for Web3 Hero & Arena titles.
- * Renders cinematic backlight auroras, ambient quantum dust, and diamond glint sparkles
- * strictly BEHIND the letters, preserving 100% crisp typography clarity.
+ * BoB — High-Voltage Electric Lightning Engine
+ * Procedural electric lightning simulation for Web3 Hero & Arena titles.
+ * Renders emerald lightning bolts around the Bull B and crimson lightning bolts around the Bear B.
  */
 
 (function () {
   'use strict';
 
-  class CyberAuraSimulator {
+  class LightningSimulator {
     constructor(canvasId, type = 'bull') {
       this.canvas = document.getElementById(canvasId);
       if (!this.canvas) return;
 
       this.ctx = this.canvas.getContext('2d');
-      this.type = type; // 'bull' (emerald) or 'bear' (crimson)
-      this.dust = [];
-      this.glints = [];
-      this.maxDust = 24;
-      this.maxGlints = 6;
+      this.type = type; // 'bull' (green lightning) or 'bear' (red lightning)
+      this.bolts = [];
+      this.sparks = [];
       this.width = 0;
       this.height = 0;
       this.dpr = Math.min(window.devicePixelRatio || 1, 2);
       this.isRunning = false;
       this.animId = null;
-      this.time = 0;
+      this.frame = 0;
 
-      // Tier-1 Color Schemes
+      // Color Palettes
       if (this.type === 'bull') {
         this.colors = {
-          glowCore: 'rgba(0, 255, 136, ',
-          glowOuter: 'rgba(16, 185, 129, ',
-          sparkle: '#a7f3d0',
-          glint: '#ffffff'
+          outer: 'rgba(0, 255, 136, ',
+          mid: 'rgba(52, 211, 153, ',
+          core: '#ffffff',
+          spark: 'rgba(110, 231, 183, '
         };
       } else {
         this.colors = {
-          glowCore: 'rgba(255, 51, 68, ',
-          glowOuter: 'rgba(220, 38, 38, ',
-          sparkle: '#fecaca',
-          glint: '#ffffff'
+          outer: 'rgba(255, 40, 60, ',
+          mid: 'rgba(251, 113, 133, ',
+          core: '#ffffff',
+          spark: 'rgba(254, 202, 202, '
         };
       }
 
@@ -58,15 +55,6 @@
         }
       });
 
-      // Spawn initial ambient stardust
-      for (let i = 0; i < this.maxDust; i++) {
-        this.dust.push(this.createDust(true));
-      }
-
-      for (let i = 0; i < this.maxGlints; i++) {
-        this.glints.push(this.createGlint());
-      }
-
       this.start();
     }
 
@@ -82,34 +70,73 @@
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     }
 
-    createDust(randomLife = false) {
-      const w = this.width || 80;
-      const h = this.height || 100;
+    // Generate jagged lightning path with midpoint displacement
+    generateLightning(x1, y1, x2, y2, displacement, iteration) {
+      if (iteration <= 0) {
+        return [{ x: x1, y: y1 }, { x: x2, y: y2 }];
+      }
 
-      return {
-        x: w * 0.15 + Math.random() * (w * 0.7),
-        y: h * 0.2 + Math.random() * (h * 0.75),
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: -(0.25 + Math.random() * 0.55),
-        radius: 0.6 + Math.random() * 1.2,
-        life: randomLife ? Math.random() * 60 : 0,
-        maxLife: 50 + Math.random() * 40,
-        pulseSpeed: 0.05 + Math.random() * 0.05,
-        seed: Math.random() * 100
-      };
+      const midX = (x1 + x2) / 2 + (Math.random() - 0.5) * displacement;
+      const midY = (y1 + y2) / 2 + (Math.random() - 0.5) * displacement;
+
+      const left = this.generateLightning(x1, y1, midX, midY, displacement * 0.55, iteration - 1);
+      const right = this.generateLightning(midX, midY, x2, y2, displacement * 0.55, iteration - 1);
+
+      return left.slice(0, -1).concat(right);
     }
 
-    createGlint() {
+    // Trigger a lightning arc around the letter perimeter
+    spawnBolt() {
       const w = this.width || 80;
       const h = this.height || 100;
 
+      // Define letter bounding box center & spread
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      const rx = w * 0.35;
+      const ry = h * 0.42;
+
+      // Pick two angles on the perimeter of the letter
+      const angle1 = Math.random() * Math.PI * 2;
+      const angle2 = angle1 + (Math.PI * 0.4 + Math.random() * Math.PI * 0.8);
+
+      const x1 = cx + Math.cos(angle1) * rx;
+      const y1 = cy + Math.sin(angle1) * ry;
+      const x2 = cx + Math.cos(angle2) * rx;
+      const y2 = cy + Math.sin(angle2) * ry;
+
+      const path = this.generateLightning(x1, y1, x2, y2, 22, 4);
+
+      // Create branch bolt
+      let branch = null;
+      if (Math.random() > 0.35 && path.length > 4) {
+        const branchStart = path[Math.floor(path.length * 0.5)];
+        const branchEnd = {
+          x: branchStart.x + (Math.random() - 0.5) * w * 0.45,
+          y: branchStart.y + (Math.random() - 0.5) * h * 0.45
+        };
+        branch = this.generateLightning(branchStart.x, branchStart.y, branchEnd.x, branchEnd.y, 14, 3);
+      }
+
+      // Spawn electric sparks at strike ends
+      for (let i = 0; i < 4; i++) {
+        this.sparks.push({
+          x: x2,
+          y: y2,
+          vx: (Math.random() - 0.5) * 3,
+          vy: (Math.random() - 0.5) * 3,
+          life: 0,
+          maxLife: 14 + Math.random() * 10,
+          radius: 1 + Math.random() * 1.5
+        });
+      }
+
       return {
-        x: w * 0.2 + Math.random() * (w * 0.6),
-        y: h * 0.2 + Math.random() * (h * 0.65),
+        path: path,
+        branch: branch,
         life: 0,
-        maxLife: 30 + Math.random() * 30,
-        size: 2.5 + Math.random() * 3.5,
-        delay: Math.floor(Math.random() * 80)
+        maxLife: 3 + Math.floor(Math.random() * 4), // Fast lightning strike flicker
+        width: 1.5 + Math.random() * 1.5
       };
     }
 
@@ -136,112 +163,110 @@
       const ctx = this.ctx;
       if (!ctx || this.width === 0 || this.height === 0) return;
 
-      this.time += 0.03;
+      this.frame++;
       ctx.clearRect(0, 0, this.width, this.height);
 
-      const centerX = this.width * 0.5;
-      const centerY = this.height * 0.52;
-
-      // 1. Cinematic Backlight Aurora Flare (Soft Ambient Glow Behind the Letter)
-      ctx.globalCompositeOperation = 'screen';
-
-      const breathe = Math.sin(this.time * 1.8) * 0.08;
-      const auraRadius = (this.width * 0.42) * (1 + breathe);
-
-      const auraGrad = ctx.createRadialGradient(
-        centerX, centerY, 5,
-        centerX, centerY, auraRadius
-      );
-      auraGrad.addColorStop(0, this.colors.glowCore + (0.28 + breathe) + ')');
-      auraGrad.addColorStop(0.5, this.colors.glowOuter + (0.12 + breathe * 0.5) + ')');
-      auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-      ctx.fillStyle = auraGrad;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, auraRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 2. Ambient Quantum Stardust Particles (Floating gently in 3D depth)
       ctx.globalCompositeOperation = 'lighter';
 
-      for (let i = 0; i < this.dust.length; i++) {
-        const d = this.dust[i];
-        d.life++;
+      // 1. Spawning Lightning Bolts
+      // Continuous electric crackle (1 to 2 bolts per burst)
+      if (this.frame % 3 === 0 || this.bolts.length === 0) {
+        if (Math.random() > 0.15) {
+          this.bolts.push(this.spawnBolt());
+        }
+      }
+      if (Math.random() > 0.65) {
+        this.bolts.push(this.spawnBolt());
+      }
 
-        if (d.life >= d.maxLife) {
-          this.dust[i] = this.createDust(false);
+      // 2. Render & Update Bolts
+      for (let i = this.bolts.length - 1; i >= 0; i--) {
+        const b = this.bolts[i];
+        b.life++;
+
+        if (b.life >= b.maxLife) {
+          this.bolts.splice(i, 1);
           continue;
         }
 
-        d.x += d.vx + Math.sin(d.life * d.pulseSpeed + d.seed) * 0.3;
-        d.y += d.vy;
+        const alpha = 1 - (b.life / b.maxLife);
 
-        const progress = d.life / d.maxLife;
-        const alpha = Math.sin(progress * Math.PI) * 0.85;
+        this.drawBolt(ctx, b.path, b.width, alpha);
+        if (b.branch) {
+          this.drawBolt(ctx, b.branch, b.width * 0.65, alpha * 0.85);
+        }
+      }
 
-        ctx.fillStyle = this.colors.glowCore + Math.max(0, alpha) + ')';
+      // 3. Render & Update Electric Sparks
+      for (let i = this.sparks.length - 1; i >= 0; i--) {
+        const s = this.sparks[i];
+        s.life++;
+
+        if (s.life >= s.maxLife) {
+          this.sparks.splice(i, 1);
+          continue;
+        }
+
+        s.x += s.vx;
+        s.y += s.vy;
+
+        const sAlpha = 1 - (s.life / s.maxLife);
+        ctx.fillStyle = this.colors.spark + (sAlpha * 0.9) + ')';
         ctx.beginPath();
-        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, s.radius * sAlpha, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
 
-      // 3. Diamond Star Glints (Exquisite 4-point sparkle flashes)
-      for (let i = 0; i < this.glints.length; i++) {
-        const g = this.glints[i];
+    drawBolt(ctx, path, strokeWidth, alpha) {
+      if (!path || path.length < 2) return;
 
-        if (g.delay > 0) {
-          g.delay--;
-          continue;
-        }
-
-        g.life++;
-        if (g.life >= g.maxLife) {
-          this.glints[i] = this.createGlint();
-          continue;
-        }
-
-        const gProgress = g.life / g.maxLife;
-        const gAlpha = Math.sin(gProgress * Math.PI);
-        const s = g.size * Math.sin(gProgress * Math.PI);
-
-        if (gAlpha > 0.05) {
-          ctx.save();
-          ctx.translate(g.x, g.y);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${gAlpha * 0.9})`;
-          ctx.lineWidth = 1;
-
-          // 4-point star cross
-          ctx.beginPath();
-          ctx.moveTo(-s * 2, 0);
-          ctx.lineTo(s * 2, 0);
-          ctx.moveTo(0, -s * 2);
-          ctx.lineTo(0, s * 2);
-          ctx.stroke();
-
-          // Center bright point
-          ctx.fillStyle = `rgba(255, 255, 255, ${gAlpha})`;
-          ctx.beginPath();
-          ctx.arc(0, 0, s * 0.4, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
-        }
+      // Pass 1: Wide Outer Neon Plasma Aura
+      ctx.strokeStyle = this.colors.outer + (alpha * 0.5) + ')';
+      ctx.lineWidth = strokeWidth * 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'bevel';
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for (let i = 1; i < path.length; i++) {
+        ctx.lineTo(path[i].x, path[i].y);
       }
+      ctx.stroke();
+
+      // Pass 2: Vivid Mid Plasma
+      ctx.strokeStyle = this.colors.mid + (alpha * 0.85) + ')';
+      ctx.lineWidth = strokeWidth * 2;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for (let i = 1; i < path.length; i++) {
+        ctx.lineTo(path[i].x, path[i].y);
+      }
+      ctx.stroke();
+
+      // Pass 3: White-Hot High Voltage Core
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
+      ctx.lineWidth = strokeWidth * 0.9;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for (let i = 1; i < path.length; i++) {
+        ctx.lineTo(path[i].x, path[i].y);
+      }
+      ctx.stroke();
     }
   }
 
-  function initSimulators() {
-    new CyberAuraSimulator('canvas-flame-bull', 'bull');
-    new CyberAuraSimulator('canvas-flame-bear', 'bear');
-    new CyberAuraSimulator('canvas-arena-bull', 'bull');
-    new CyberAuraSimulator('canvas-arena-bear', 'bear');
+  function initLightning() {
+    new LightningSimulator('canvas-flame-bull', 'bull');
+    new LightningSimulator('canvas-flame-bear', 'bear');
+    new LightningSimulator('canvas-arena-bull', 'bull');
+    new LightningSimulator('canvas-arena-bear', 'bear');
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSimulators);
+    document.addEventListener('DOMContentLoaded', initLightning);
   } else {
-    initSimulators();
+    initLightning();
   }
 
-  window.initBoBBonfires = initSimulators;
+  window.initBoBLightning = initLightning;
 })();
