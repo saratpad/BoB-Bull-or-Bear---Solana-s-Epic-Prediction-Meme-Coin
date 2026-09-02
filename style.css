@@ -674,21 +674,21 @@ button { font-family: inherit; }
   height: clamp(5.5rem, 15vw, 9.8rem);
 }
 
-/* High-Voltage Electric Lightning Canvas Layer */
+/* High-Voltage Electric Lightning & Fire Embers Canvas Layer (Behind Letters) */
 .bonfire-canvas {
   position: absolute;
-  top: -20%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
   pointer-events: none;
-  z-index: 6; /* Electric bolts strike around and over the letter edges */
+  z-index: 2; /* Strictly behind the letters so nothing obscures the text */
 }
 
-/* 100% ULTRA CRISP SOLID TYPOGRAPHY — NO BLUR / NO FUZZ */
+/* 100% ULTRA CRISP SOLID TYPOGRAPHY — FRONT LAYER, ZERO VISUAL OBSTRUCTION */
 .duel-char-b {
   position: relative;
-  z-index: 4;
+  z-index: 10; /* Frontmost layer: 100% crisp, zero embers or bolts in front */
   font-family: 'Orbitron', -apple-system, sans-serif;
   font-size: clamp(5.5rem, 15vw, 9.8rem);
   font-weight: 950;
