@@ -2132,3 +2132,143 @@ button { font-family: inherit; }
   .hero-title { font-size: 3rem; }
   .hero-scroll-indicator { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════
+   ARENA PORTAL SHOWCASE & NAV LINK
+   ═══════════════════════════════════════════════════ */
+.nav-link-arena {
+  color: #00ff88 !important;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+}
+
+.arena-portal-card {
+  position: relative;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 24px;
+  padding: 40px 32px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 255, 136, 0.05);
+  overflow: hidden;
+  text-align: center;
+}
+
+.arena-portal-glow {
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 350px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(0, 255, 136, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.arena-portal-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.arena-badge-live {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  font-family: var(--font-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}
+
+.arena-badge-rule,
+.arena-badge-yield {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  font-family: var(--font-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}
+
+.arena-portal-headline {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 12px;
+}
+
+.arena-portal-desc {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  max-width: 720px;
+  margin: 0 auto 32px auto;
+  line-height: 1.6;
+}
+
+.arena-portal-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 768px) {
+  .arena-portal-features {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .arena-portal-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arena-feat-item {
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.arena-feat-icon {
+  font-size: 1.8rem;
+  margin-bottom: 4px;
+}
+
+.arena-feat-item strong {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: #f1f5f9;
+}
+
+.arena-feat-item small {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.arena-portal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.arena-launch-btn {
+  padding: 16px 36px;
+  font-size: 1.1rem;
+}
+

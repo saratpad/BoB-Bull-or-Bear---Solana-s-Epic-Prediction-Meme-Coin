@@ -102,7 +102,7 @@
       <div class="nav-links" id="nav-links">
         <a href="#about" class="nav-link">About</a>
         <a href="#factions" class="nav-link">Factions</a>
-        <a href="#staking" class="nav-link">Staking Arena</a>
+        <a href="arena.html" class="nav-link nav-link-arena">⚔️ BoB Arena</a>
         <a href="#mechanics" class="nav-link">Mechanics</a>
         <a href="#roadmap" class="nav-link">Roadmap</a>
         <!-- Direct 1-Click Wallet Connect Button -->
@@ -210,13 +210,13 @@
       <p class="hero-tagline" id="hero-tagline">The Ultimate GameFi Prediction Market</p>
 
       <div class="hero-actions">
-        <a href="#staking" class="btn btn-primary">
+        <a href="arena.html" class="btn btn-primary">
           <span class="btn-shimmer"></span>
           Enter the Arena
         </a>
         <a href="#about" class="btn btn-ghost">Learn More</a>
-        <!-- Game Button (admin controlled, hidden by default) -->
-        <a href="#" id="game-entry-btn" class="btn btn-game" style="display:none;" target="_blank" rel="noopener">
+        <!-- Game Button (admin controlled) -->
+        <a href="arena.html" id="game-entry-btn" class="btn btn-game" style="display:none;">
           <span class="btn-shimmer"></span>
           🎮 Play Now
         </a>
@@ -391,111 +391,59 @@
   </section>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- REAL STAKING ARENA SECTION                   -->
+  <!-- ARENA SHOWCASE / ENTRY PORTAL                 -->
   <!-- ═══════════════════════════════════════════ -->
-  <section id="staking" class="staking-section">
+  <section id="arena-portal" class="staking-section arena-portal-section">
     <div class="container">
       <div class="section-header" data-anim="up">
-        <p class="section-tag">ON-CHAIN PREDICTION ARENA</p>
-        <h2 class="section-title">STAKE &amp; PREDICT <span class="text-gradient">SOLANA</span></h2>
+        <p class="section-tag">DEDICATED WEB3 GAMEFI APP</p>
+        <h2 class="section-title">ENTER THE <span class="text-gradient">BoB ARENA</span></h2>
         <div class="section-divider"></div>
+        <p class="section-subtitle">Real-time prediction battle arena separated for peak speed and security. Stake $BoB, monitor live SOL targets, vote to shift game outcomes, and claim winners rewards.</p>
       </div>
 
-      <div class="staking-card" data-anim="up">
-        <!-- Emergency Halt Banner inside Staking if active -->
-        <div id="staking-halted-banner" class="staking-halted-notice" style="display:none;">
-          ⚠️ Staking is temporarily paused by Admin Security Protocol.
-        </div>
+      <div class="arena-portal-card" data-anim="up">
+        <div class="arena-portal-glow"></div>
+        <div class="arena-portal-content">
+          <div class="arena-portal-badges">
+            <span class="arena-badge-live">🔴 ROUND #88 ACTIVE</span>
+            <span class="arena-badge-rule">1 $BoB = 1 VOTE</span>
+            <span class="arena-badge-yield">8% WINNER BONUS</span>
+          </div>
+          
+          <h3 class="arena-portal-headline">SOL Price Prediction • Dynamic Voting • On-Chain Slashing</h3>
+          <p class="arena-portal-desc">
+            The game operates in dedicated rounds with target price mechanics. Stake $BoB to remove supply from circulation, cast token-weighted votes to reroll targets or extend time, and conquer the pool.
+          </p>
 
-        <!-- Not connected state -->
-        <div id="staking-not-connected" class="staking-state">
-          <div class="staking-lock-icon">🔒</div>
-          <h3 class="staking-state-title">Connect Wallet to Enter</h3>
-          <p class="staking-state-desc">Directly connect your Phantom or Solflare wallet to start staking $BoB in the live arena.</p>
-          <button id="staking-connect-btn" class="btn btn-primary">
-            <span class="btn-shimmer"></span>
-            Connect Wallet
-          </button>
-        </div>
-
-        <!-- Connected state -->
-        <div id="staking-connected" class="staking-state" style="display:none;">
-          <!-- Balance Bar (Real Live Data) -->
-          <div class="staking-balance-bar">
-            <div class="staking-balance-item">
-              <span class="staking-balance-label">Wallet SOL</span>
-              <span class="staking-balance-value" id="staking-available">0.00 SOL</span>
+          <div class="arena-portal-features">
+            <div class="arena-feat-item">
+              <span class="arena-feat-icon">🎯</span>
+              <strong>Target Price</strong>
+              <small>SOL benchmark deciding Bull or Bear win</small>
             </div>
-            <div class="staking-balance-sep"></div>
-            <div class="staking-balance-item">
-              <span class="staking-balance-label">Total Staked</span>
-              <span class="staking-balance-value staking-staked-val" id="staking-staked">0.00 SOL</span>
+            <div class="arena-feat-item">
+              <span class="arena-feat-icon">🗳️</span>
+              <strong>60% Dynamic Vote</strong>
+              <small>Reroll price target (±20%) or extend timer</small>
             </div>
-            <div class="staking-balance-sep"></div>
-            <div class="staking-balance-item">
-              <span class="staking-balance-label">Rewards Pool</span>
-              <span class="staking-balance-value staking-rewards-val" id="staking-rewards">+0.00 SOL</span>
+            <div class="arena-feat-item">
+              <span class="arena-feat-icon">🔒</span>
+              <strong>Round-Locked Yield</strong>
+              <small>Claims unlock strictly upon round resolution</small>
+            </div>
+            <div class="arena-feat-item">
+              <span class="arena-feat-icon">♻️</span>
+              <strong>Buyback Loop</strong>
+              <small>Vote fees sweep $BoB off DEX automatically</small>
             </div>
           </div>
 
-          <!-- Faction Choose -->
-          <div class="staking-faction-choose">
-            <p class="staking-faction-label">Select Your Prediction Faction</p>
-            <div class="staking-faction-btns">
-              <button class="staking-faction-btn staking-faction-bull active" data-side="bull">
-                <span class="staking-faction-emoji">🐂</span>
-                <span>BULL (SOL UP)</span>
-              </button>
-              <button class="staking-faction-btn staking-faction-bear" data-side="bear">
-                <span class="staking-faction-emoji">🐻</span>
-                <span>BEAR (SOL DOWN)</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Stake Input -->
-          <div class="staking-input-group">
-            <div class="staking-input-label-row">
-              <label class="staking-input-label">Stake Amount (SOL)</label>
-              <span class="staking-vault-notice" id="staking-vault-notice">Vault: Active</span>
-            </div>
-            <div class="staking-input-wrap">
-              <input type="number" id="staking-amount" class="staking-input" placeholder="0.05" min="0.01" step="0.01" />
-              <button id="staking-max-btn" class="staking-max-btn">MAX</button>
-            </div>
-            <div class="staking-quick-amounts">
-              <button class="staking-quick-btn" data-val="0.05">0.05 SOL</button>
-              <button class="staking-quick-btn" data-val="0.1">0.1 SOL</button>
-              <button class="staking-quick-btn" data-val="0.5">0.5 SOL</button>
-              <button class="staking-quick-btn" data-val="1">1.0 SOL</button>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="staking-actions">
-            <button id="stake-btn" class="btn btn-primary staking-action-btn">
+          <div class="arena-portal-actions">
+            <a href="arena.html" class="btn btn-primary btn-lg arena-launch-btn">
               <span class="btn-shimmer"></span>
-              ⚡ Sign &amp; Stake
-            </button>
-            <button id="unstake-btn" class="btn btn-ghost staking-action-btn">Claim Rewards</button>
-          </div>
-
-          <!-- Staking Info & Live Status -->
-          <div class="staking-info-row">
-            <span>Current Round</span>
-            <span class="staking-info-value" id="staking-round-num">#88 (Live)</span>
-          </div>
-          <div class="staking-info-row">
-            <span>Round Closes In</span>
-            <span class="staking-info-value staking-timer" id="staking-timer">05:32:18</span>
-          </div>
-          <div class="staking-info-row">
-            <span>Approval Mode</span>
-            <span class="staking-info-value" id="staking-mode-display">⚡ Auto Instant</span>
-          </div>
-          <div class="staking-info-row">
-            <span>Staking Vault Destination</span>
-            <code class="staking-info-vault" id="staking-vault-display">Default Treasury</code>
+              ⚔️ Launch BoB Arena App
+            </a>
           </div>
         </div>
       </div>
@@ -516,50 +464,50 @@
       <div class="mechanics-grid">
         <div class="mechanic-card" data-anim="up" style="--delay: 0">
           <div class="mechanic-number">01</div>
-          <div class="mechanic-icon">🎯</div>
-          <h4 class="mechanic-title">Stake to Play</h4>
-          <p class="mechanic-desc">Lock your stake directly in the BoB Arena vault. Every stake gives you weighted prediction power in the battle.</p>
+          <div class="mechanic-icon">📥</div>
+          <h4 class="mechanic-title">Stake $BoB (Not SOL)</h4>
+          <p class="mechanic-desc">Lock $BoB tokens into secure 2-tier vaults, pulling active supply off the market. 1 $BoB staked grants 1 vote weight in game governance.</p>
         </div>
         <div class="mechanic-card" data-anim="up" style="--delay: 1">
           <div class="mechanic-number">02</div>
-          <div class="mechanic-icon">⚖️</div>
-          <h4 class="mechanic-title">Predict &amp; Win</h4>
-          <p class="mechanic-desc">Predict SOL price trend. Winners take 8% of the opposing side's staked pool as instant yield bonuses.</p>
+          <div class="mechanic-icon">🎯</div>
+          <h4 class="mechanic-title">SOL Target Price</h4>
+          <p class="mechanic-desc">Rounds run against a defined SOL target price. If SOL hits or stays above target, Bulls triumph; below target, Bears rule.</p>
         </div>
         <div class="mechanic-card" data-anim="up" style="--delay: 2">
           <div class="mechanic-number">03</div>
-          <div class="mechanic-icon">🔥</div>
-          <h4 class="mechanic-title">Deflationary Burn</h4>
-          <p class="mechanic-desc">1% of every losing pool is routed to the official burn address. Supply shrinks forever.</p>
+          <div class="mechanic-icon">🗳️</div>
+          <h4 class="mechanic-title">Dynamic Voting</h4>
+          <p class="mechanic-desc">Flip the game state live! Vote to reroll target price (±20%) or extend round time. Requires 60% token weight to pass (1 USD fee in SOL).</p>
         </div>
         <div class="mechanic-card" data-anim="up" style="--delay: 3">
           <div class="mechanic-number">04</div>
           <div class="mechanic-icon">♻️</div>
-          <h4 class="mechanic-title">Auto Buyback</h4>
-          <p class="mechanic-desc">Configured buyback routing pumps market buy pressure automatically every round.</p>
+          <h4 class="mechanic-title">Automated Buyback Loop</h4>
+          <p class="mechanic-desc">100% of voting SOL fees are routed to automated DEX buyback contracts, constantly absorbing $BoB market float.</p>
         </div>
       </div>
 
       <!-- Slashing Breakdown -->
       <div class="slash-breakdown" data-anim="up">
         <h3 class="slash-title">Slashing &amp; Yield Breakdown</h3>
-        <p class="slash-subtitle">When a round ends, the losing side gets slashed 10% of their staked pool:</p>
+        <p class="slash-subtitle">Upon round settlement, the losing faction is slashed <strong>10%</strong> of their staked $BoB:</p>
         <div class="slash-grid">
           <div class="slash-item slash-green">
             <span class="slash-pct" id="route-display-winner">8%</span>
-            <span class="slash-label">Winners Pool<br/><small>Distributed as bonus</small></span>
+            <span class="slash-label">Winners Bonus Pool<br/><small>Directly yields to winning stakers</small></span>
           </div>
           <div class="slash-item slash-orange">
             <span class="slash-pct" id="route-display-burn">1%</span>
-            <span class="slash-label">Burned Forever<br/><small>Deflationary mechanism</small></span>
+            <span class="slash-label">Burned Forever<br/><small>Permanent supply reduction</small></span>
           </div>
           <div class="slash-item slash-blue">
             <span class="slash-pct" id="route-display-dev">0.5%</span>
-            <span class="slash-label">Dev &amp; Maintenance<br/><small>Keeps engine running</small></span>
+            <span class="slash-label">Dev &amp; Maintenance<br/><small>Infrastructure &amp; oracles</small></span>
           </div>
           <div class="slash-item slash-purple">
             <span class="slash-pct" id="route-display-buyback">0.5%</span>
-            <span class="slash-label">Buyback Reserve<br/><small>Supports floor price</small></span>
+            <span class="slash-label">Network Fee<br/><small>Solana transaction reserve</small></span>
           </div>
         </div>
       </div>
@@ -650,10 +598,10 @@
       <p class="section-tag">THE BATTLE AWAITS</p>
       <h2 class="cta-heading">READY TO<br/><span class="text-gradient">CHOOSE YOUR SIDE?</span></h2>
 
-      <a href="#staking" class="btn btn-primary btn-lg">
+      <a href="arena.html" class="btn btn-primary btn-lg">
         <span class="btn-shimmer"></span>
         ENTER BoB ARENA
-        <small class="btn-sub">(CONNECT &amp; STAKE)</small>
+        <small class="btn-sub">(LIVE PREDICTION &amp; STAKING ↗)</small>
       </a>
 
       <div class="cta-socials">
@@ -682,7 +630,7 @@
       <div class="footer-links">
         <a href="#about">About</a>
         <a href="#factions">Factions</a>
-        <a href="#staking">Staking Arena</a>
+        <a href="arena.html">⚔️ BoB Arena</a>
         <a href="#mechanics">Mechanics</a>
         <a href="#roadmap">Roadmap</a>
       </div>
@@ -732,7 +680,8 @@
       <!-- Admin Navigation Tabs -->
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="tab-general">🖥️ General &amp; Display</button>
-        <button class="admin-tab" data-tab="tab-vault">🏦 Staking Vault</button>
+        <button class="admin-tab" data-tab="tab-vault">🏦 Multi-Wallet Security (4 Wallets)</button>
+        <button class="admin-tab" data-tab="tab-round">🎮 Round Management</button>
         <button class="admin-tab" data-tab="tab-routing">🛣️ Token Routing</button>
         <button class="admin-tab" data-tab="tab-security">🚨 Emergency &amp; Security</button>
         <button class="admin-tab" data-tab="tab-wallets">👥 Connected Wallets (<span id="admin-wallets-badge">0</span>)</button>
@@ -763,10 +712,10 @@
           <div class="admin-group">
             <label class="admin-label">🎮 Game Entry URL &amp; Play Button</label>
             <div class="admin-row">
-              <input type="url" id="admin-game-url" class="admin-input" placeholder="https://game.bob-arena.com" />
+              <input type="url" id="admin-game-url" class="admin-input" placeholder="arena.html" />
               <button id="admin-game-toggle" class="admin-toggle-btn">Show</button>
             </div>
-            <small class="admin-hint">Enables "Play Now" button in hero actions</small>
+            <small class="admin-hint">Enables "Play Now" button in hero actions (default: arena.html)</small>
           </div>
 
           <div class="admin-group">
@@ -775,12 +724,33 @@
           </div>
         </div>
 
-        <!-- TAB 2: STAKING VAULT & APPROVALS -->
+        <!-- TAB 2: MULTI-WALLET SECURITY ARCHITECTURE (4 WALLETS) -->
         <div class="admin-tab-pane" id="tab-vault">
+          <p class="admin-tab-desc">Tiered wallet security architecture. Staking intake, cold safety layer, and separate fee collection:</p>
+          
           <div class="admin-group">
-            <label class="admin-label">🏦 Staking Vault Receiving Wallet (Public Key)</label>
-            <input type="text" id="admin-vault-input" class="admin-input admin-mono" placeholder="Enter Solana wallet address to receive stakes..." />
-            <small class="admin-hint">Staked funds transferred by users will be sent directly to this address.</small>
+            <label class="admin-label">🏦 Staking Vault Layer 1 (Hot Wallet Intake)</label>
+            <input type="text" id="admin-vault-input" class="admin-input admin-mono" placeholder="Solana address for receiving direct $BoB stakes..." />
+            <small class="admin-hint">Users transferring stakes will send tokens directly into this Hot Vault.</small>
+          </div>
+
+          <div class="admin-group">
+            <label class="admin-label">🔒 Staking Vault Layer 2 (Cold / Safe Secondary Vault)</label>
+            <input type="text" id="admin-vault-l2-input" class="admin-input admin-mono" placeholder="High-security cold storage wallet..." />
+            <small class="admin-hint">Emergency or surplus funds sweep automatically to this cold vault for safety.</small>
+          </div>
+
+          <div class="admin-grid-2">
+            <div class="admin-group">
+              <label class="admin-label">🎯 Vote Reroll Wallet (SOL Fees)</label>
+              <input type="text" id="admin-reroll-wallet-input" class="admin-input admin-mono" placeholder="Wallet for target reroll fees..." />
+              <small class="admin-hint">Receives the 1 USD SOL fee when users vote to reroll target.</small>
+            </div>
+            <div class="admin-group">
+              <label class="admin-label">⏳ Vote Extend Wallet (SOL Fees)</label>
+              <input type="text" id="admin-extend-wallet-input" class="admin-input admin-mono" placeholder="Wallet for round extension fees..." />
+              <small class="admin-hint">Receives the 1 USD SOL fee when users vote to extend time.</small>
+            </div>
           </div>
 
           <div class="admin-group">
@@ -791,7 +761,7 @@
                 <span class="admin-radio-custom"></span>
                 <div>
                   <strong>⚡ Automatic Payouts</strong>
-                  <p>Winners pool bonus distributed automatically when round concludes.</p>
+                  <p>Winners bonus yield unlocked automatically upon round timer expiration.</p>
                 </div>
               </label>
               <label class="admin-radio-label">
@@ -799,7 +769,7 @@
                 <span class="admin-radio-custom"></span>
                 <div>
                   <strong>🛡️ Manual Admin Approval Required</strong>
-                  <p>All claims &amp; distributions require your manual review and approval.</p>
+                  <p>All claims &amp; distributions require manual signature/approval from Admin.</p>
                 </div>
               </label>
             </div>
@@ -810,6 +780,47 @@
             <div class="admin-toggle-row">
               <span>Pause incoming stakes</span>
               <button id="admin-pause-staking-toggle" class="admin-toggle-btn">Active</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2.5: ROUND MANAGEMENT (NEW) -->
+        <div class="admin-tab-pane" id="tab-round">
+          <p class="admin-tab-desc">Configure active round criteria, targets, voting parameters, and manual resolution:</p>
+          
+          <div class="admin-grid-2">
+            <div class="admin-group">
+              <label class="admin-label">🎯 SOL Target Price ($)</label>
+              <input type="number" id="admin-target-price-input" class="admin-input admin-mono" step="0.01" placeholder="148.50" />
+              <small class="admin-hint">Benchmark price deciding Bull (SOL ≥ Target) vs Bear (SOL &lt; Target)</small>
+            </div>
+            <div class="admin-group">
+              <label class="admin-label">⏱️ Round Duration (Hours)</label>
+              <input type="number" id="admin-round-hours-input" class="admin-input admin-mono" step="1" placeholder="6" />
+              <small class="admin-hint">Default round countdown length (base: 6 hours, max extend: 1 week)</small>
+            </div>
+          </div>
+
+          <div class="admin-grid-2">
+            <div class="admin-group">
+              <label class="admin-label">🎲 Max Rerolls Allowed per Round</label>
+              <input type="number" id="admin-max-rerolls-input" class="admin-input admin-mono" value="3" min="1" max="10" />
+              <small class="admin-hint">Limits how many times players can shift target price</small>
+            </div>
+            <div class="admin-group">
+              <label class="admin-label">💵 Voting Fee (SOL equivalent to ~1 USD)</label>
+              <input type="number" id="admin-vote-fee-input" class="admin-input admin-mono" step="0.001" placeholder="0.007" />
+              <small class="admin-hint">Fee per vote (automatically sweeps into Buyback Pool)</small>
+            </div>
+          </div>
+
+          <div class="admin-danger-box" style="margin-top:1rem;">
+            <h4>🏆 Round Resolution Controller</h4>
+            <p>Force-resolve the active round or kickstart a new prediction cycle:</p>
+            <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+              <button id="admin-settle-bull-btn" class="btn btn-sm" style="background:#059669; color:#fff;">Declare BULL Win 🐂</button>
+              <button id="admin-settle-bear-btn" class="btn btn-sm" style="background:#dc2626; color:#fff;">Declare BEAR Win 🐻</button>
+              <button id="admin-reset-round-btn" class="btn btn-ghost btn-sm">🔄 Start New Round</button>
             </div>
           </div>
         </div>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BoB Arena — Bull or Bear Prediction Battle</title>
+  <meta name="description" content="BoB Arena — Stake $BoB, predict SOL price direction, vote to change the game. Real-time on-chain GameFi prediction battles on Solana." />
+  <meta name="theme-color" content="#06060c" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Solana Web3.js -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+
+  <!-- Shared + Arena CSS -->
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="arena.css" />
+</head>
+<body class="arena-body">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ARENA NAVBAR                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav id="navbar" class="navbar arena-navbar visible">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <img src="logo.jpeg" alt="BoB" class="nav-logo" />
+        <span class="nav-brand-text">B<span class="text-green">o</span>B</span>
+        <span class="arena-nav-badge">ARENA</span>
+      </a>
+      <div class="arena-nav-center">
+        <span class="arena-live-dot"></span>
+        <span class="arena-round-tag" id="arena-round-tag">ROUND #88 — LIVE</span>
+      </div>
+      <div class="arena-nav-right">
+        <button id="arena-wallet-btn" class="btn btn-wallet">
+          <span class="wallet-status-dot"></span>
+          <span id="arena-wallet-text">Connect Wallet</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WALLET FALLBACK MODAL                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="wallet-fallback-modal" class="modal-overlay" style="display:none;">
+    <div class="modal wallet-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Install Solana Wallet</h3>
+        <button class="modal-close" data-close="wallet-fallback-modal">✕</button>
+      </div>
+      <p class="modal-desc">No Solana wallet detected. Install one to enter BoB Arena:</p>
+      <div class="wallet-options">
+        <a href="https://phantom.app/" target="_blank" rel="noopener" class="wallet-option">
+          <div class="wallet-option-icon">👻</div>
+          <div class="wallet-option-info">
+            <span class="wallet-option-name">Phantom</span>
+            <span class="wallet-option-status">Most Popular</span>
+          </div>
+          <span class="wallet-option-arrow">Install ↗</span>
+        </a>
+        <a href="https://solflare.com/" target="_blank" rel="noopener" class="wallet-option">
+          <div class="wallet-option-icon">🌞</div>
+          <div class="wallet-option-info">
+            <span class="wallet-option-name">Solflare</span>
+            <span class="wallet-option-status">Full Security</span>
+          </div>
+          <span class="wallet-option-arrow">Install ↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WALLET INFO MODAL                           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="wallet-info-modal" class="modal-overlay" style="display:none;">
+    <div class="modal wallet-info-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Wallet Connected</h3>
+        <button class="modal-close" data-close="wallet-info-modal">✕</button>
+      </div>
+      <div class="wallet-info-content">
+        <div class="wallet-info-address">
+          <span class="wallet-info-label">Public Address</span>
+          <code id="wallet-display-address">—</code>
+        </div>
+        <div class="wallet-info-balance">
+          <div class="wallet-balance-item">
+            <span class="wallet-balance-label">SOL Balance</span>
+            <span class="wallet-balance-value" id="wallet-sol-balance">0.00 SOL</span>
+          </div>
+          <div class="wallet-balance-item">
+            <span class="wallet-balance-label">$BoB Balance</span>
+            <span class="wallet-balance-value wallet-balance-bob" id="wallet-bob-balance">0 BoB</span>
+          </div>
+        </div>
+        <button id="wallet-disconnect-btn" class="btn btn-ghost btn-disconnect">Disconnect Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MAIN ARENA CONTENT                          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <main class="arena-main">
+
+    <!-- NOT CONNECTED STATE -->
+    <div id="arena-not-connected" class="arena-gate">
+      <div class="arena-gate-inner">
+        <img src="logo.jpeg" alt="BoB" class="arena-gate-logo" />
+        <h1 class="arena-gate-title">B<span class="text-green">o</span>B <span class="text-dim">ARENA</span></h1>
+        <p class="arena-gate-subtitle">Stake $BoB • Predict SOL • Dominate the Round</p>
+        <p class="arena-gate-desc">Connect your Solana wallet to enter the prediction battlefield. Stake your $BoB tokens, choose Bull or Bear, and battle for the winners pool.</p>
+        <button id="arena-gate-connect" class="btn btn-primary btn-lg">
+          <span class="btn-shimmer"></span>
+          Connect Wallet &amp; Enter
+        </button>
+        <a href="index.html" class="arena-gate-back">← Back to Landing Page</a>
+      </div>
+    </div>
+
+    <!-- CONNECTED STATE — FULL ARENA -->
+    <div id="arena-connected" style="display:none;">
+
+      <!-- ═══ ROUND STATUS PANEL ═══ -->
+      <section class="arena-round-panel">
+        <div class="arena-round-header">
+          <div class="arena-round-label">
+            <span class="arena-status-badge arena-status-live" id="round-status-badge">🔴 LIVE</span>
+            <span class="arena-round-number" id="round-number">Round #88</span>
+          </div>
+          <div class="arena-round-timer-wrap">
+            <span class="arena-timer-label">Round Ends In</span>
+            <span class="arena-timer" id="round-timer">05:59:48</span>
+          </div>
+        </div>
+
+        <!-- SOL Price Display -->
+        <div class="arena-price-row">
+          <div class="arena-price-card arena-price-target">
+            <span class="arena-price-label">🎯 SOL Target Price</span>
+            <span class="arena-price-value" id="sol-target-price">$148.50</span>
+            <span class="arena-price-sub">Set by round config</span>
+          </div>
+          <div class="arena-price-vs">VS</div>
+          <div class="arena-price-card arena-price-current">
+            <span class="arena-price-label">📊 SOL Current Price</span>
+            <span class="arena-price-value" id="sol-current-price">$—</span>
+            <span class="arena-price-sub" id="sol-price-updated">Fetching live data...</span>
+          </div>
+        </div>
+
+        <!-- Bull vs Bear Pools -->
+        <div class="arena-pools">
+          <div class="arena-pool arena-pool-bull">
+            <div class="arena-pool-header">
+              <span class="arena-pool-emoji">🐂</span>
+              <span class="arena-pool-name">BULL (SOL UP)</span>
+            </div>
+            <span class="arena-pool-amount" id="bull-pool-amount">0 $BoB</span>
+            <div class="arena-pool-bar-track">
+              <div class="arena-pool-bar arena-pool-bar-bull" id="bull-pool-bar" style="width:50%"></div>
+            </div>
+            <span class="arena-pool-pct" id="bull-pool-pct">50%</span>
+          </div>
+          <div class="arena-pool arena-pool-bear">
+            <div class="arena-pool-header">
+              <span class="arena-pool-emoji">🐻</span>
+              <span class="arena-pool-name">BEAR (SOL DOWN)</span>
+            </div>
+            <span class="arena-pool-amount" id="bear-pool-amount">0 $BoB</span>
+            <div class="arena-pool-bar-track">
+              <div class="arena-pool-bar arena-pool-bar-bear" id="bear-pool-bar" style="width:50%"></div>
+            </div>
+            <span class="arena-pool-pct" id="bear-pool-pct">50%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ STAKING + VOTING GRID ═══ -->
+      <section class="arena-action-grid">
+
+        <!-- LEFT: STAKING PANEL -->
+        <div class="arena-card arena-stake-card">
+          <h3 class="arena-card-title">📥 Stake $BoB</h3>
+
+          <div class="arena-balance-row">
+            <span class="arena-balance-label">Your $BoB Balance</span>
+            <span class="arena-balance-value" id="arena-bob-balance">0</span>
+          </div>
+
+          <div class="arena-faction-choose">
+            <button class="arena-faction-btn arena-faction-bull active" data-side="bull">
+              <span>🐂</span> BULL
+            </button>
+            <button class="arena-faction-btn arena-faction-bear" data-side="bear">
+              <span>🐻</span> BEAR
+            </button>
+          </div>
+
+          <div class="arena-input-group">
+            <div class="arena-input-wrap">
+              <input type="number" id="arena-stake-amount" class="arena-input" placeholder="Amount in $BoB" min="1" step="1" />
+              <button id="arena-max-btn" class="arena-max-btn">MAX</button>
+            </div>
+            <div class="arena-quick-btns">
+              <button class="arena-quick-btn" data-val="10000">10K</button>
+              <button class="arena-quick-btn" data-val="50000">50K</button>
+              <button class="arena-quick-btn" data-val="100000">100K</button>
+              <button class="arena-quick-btn" data-val="500000">500K</button>
+            </div>
+          </div>
+
+          <button id="arena-stake-btn" class="btn btn-primary arena-action-btn">
+            <span class="btn-shimmer"></span>
+            ⚡ Stake $BoB
+          </button>
+
+          <!-- My Position -->
+          <div class="arena-position" id="arena-position" style="display:none;">
+            <h4 class="arena-position-title">📊 My Position</h4>
+            <div class="arena-position-row">
+              <span>Staked</span>
+              <span class="arena-position-val" id="my-staked-amount">0 $BoB</span>
+            </div>
+            <div class="arena-position-row">
+              <span>Side</span>
+              <span class="arena-position-val" id="my-staked-side">—</span>
+            </div>
+            <div class="arena-position-row">
+              <span>Potential Reward</span>
+              <span class="arena-position-val arena-reward-val" id="my-potential-reward">+0 $BoB</span>
+            </div>
+            <button id="arena-claim-btn" class="btn btn-ghost arena-action-btn arena-claim-btn" disabled>
+              🏆 Claim Rewards <span class="arena-lock-icon">🔒</span>
+            </button>
+            <small class="arena-claim-note" id="arena-claim-note">Claims unlock when the round ends</small>
+          </div>
+        </div>
+
+        <!-- RIGHT: VOTING PANEL -->
+        <div class="arena-card arena-vote-card">
+          <h3 class="arena-card-title">🗳️ Dynamic Voting</h3>
+          <p class="arena-card-desc">60% of staked token weight required to pass a vote. 1 $BoB staked = 1 vote power.</p>
+
+          <!-- Vote: Reroll Target -->
+          <div class="arena-vote-section">
+            <div class="arena-vote-header">
+              <span class="arena-vote-icon">🎯</span>
+              <div>
+                <h4 class="arena-vote-title">Reroll Target Price</h4>
+                <p class="arena-vote-desc">Randomize a new SOL target (±20% from current)</p>
+              </div>
+            </div>
+            <div class="arena-vote-progress-wrap">
+              <div class="arena-vote-progress-track">
+                <div class="arena-vote-progress-fill arena-vote-fill-green" id="reroll-progress" style="width:0%"></div>
+                <div class="arena-vote-threshold"></div>
+              </div>
+              <div class="arena-vote-progress-labels">
+                <span id="reroll-current-pct">0%</span>
+                <span class="arena-vote-threshold-label">60% needed</span>
+              </div>
+            </div>
+            <div class="arena-vote-action-row">
+              <button id="vote-reroll-btn" class="btn btn-ghost arena-vote-btn">
+                Vote to Reroll (~1 USD in SOL)
+              </button>
+              <span class="arena-vote-uses" id="reroll-uses">0/3 used</span>
+            </div>
+          </div>
+
+          <!-- Vote: Extend Time -->
+          <div class="arena-vote-section">
+            <div class="arena-vote-header">
+              <span class="arena-vote-icon">⏳</span>
+              <div>
+                <h4 class="arena-vote-title">Extend Round Time</h4>
+                <p class="arena-vote-desc">Add +3 hours to the round timer</p>
+              </div>
+            </div>
+            <div class="arena-vote-progress-wrap">
+              <div class="arena-vote-progress-track">
+                <div class="arena-vote-progress-fill arena-vote-fill-blue" id="extend-progress" style="width:0%"></div>
+                <div class="arena-vote-threshold"></div>
+              </div>
+              <div class="arena-vote-progress-labels">
+                <span id="extend-current-pct">0%</span>
+                <span class="arena-vote-threshold-label">60% needed</span>
+              </div>
+            </div>
+            <div class="arena-vote-action-row">
+              <button id="vote-extend-btn" class="btn btn-ghost arena-vote-btn">
+                Vote to Extend (~1 USD in SOL)
+              </button>
+              <span class="arena-vote-uses" id="extend-info">Base: 6hrs | Extended: +0hrs</span>
+            </div>
+          </div>
+
+          <!-- Buyback Tracker -->
+          <div class="arena-buyback-tracker">
+            <div class="arena-buyback-header">
+              <span>♻️</span>
+              <strong>Buyback Pool</strong>
+            </div>
+            <span class="arena-buyback-amount" id="buyback-pool">0.00 SOL</span>
+            <p class="arena-buyback-desc">All voting fees are automatically used to buy back $BoB from DEX</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ SLASHING BREAKDOWN ═══ -->
+      <section class="arena-slash-section">
+        <h3 class="arena-slash-title">⚖️ Slashing &amp; Yield Breakdown</h3>
+        <p class="arena-slash-subtitle">When a round ends, the losing side is slashed <strong>10%</strong> of their staked $BoB:</p>
+        <div class="arena-slash-grid">
+          <div class="arena-slash-item arena-slash-green">
+            <span class="arena-slash-pct">8%</span>
+            <span class="arena-slash-label">Winners Pool</span>
+            <small>Distributed as bonus</small>
+          </div>
+          <div class="arena-slash-item arena-slash-orange">
+            <span class="arena-slash-pct">1%</span>
+            <span class="arena-slash-label">Burned Forever</span>
+            <small>Deflationary mechanism</small>
+          </div>
+          <div class="arena-slash-item arena-slash-blue">
+            <span class="arena-slash-pct">0.5%</span>
+            <span class="arena-slash-label">Dev &amp; Maintenance</span>
+            <small>Keeps engine running</small>
+          </div>
+          <div class="arena-slash-item arena-slash-purple">
+            <span class="arena-slash-pct">0.5%</span>
+            <span class="arena-slash-label">Network Fees</span>
+            <small>Transaction costs</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ ROUND HISTORY ═══ -->
+      <section class="arena-history-section">
+        <h3 class="arena-history-title">🏆 Round History</h3>
+        <div class="arena-history-list" id="round-history-list">
+          <div class="arena-history-item arena-history-bull">
+            <span class="arena-history-round">#87</span>
+            <span class="arena-history-result">🐂 BULL WIN</span>
+            <span class="arena-history-detail">Target $145 | Final $147.20</span>
+          </div>
+          <div class="arena-history-item arena-history-bear">
+            <span class="arena-history-round">#86</span>
+            <span class="arena-history-result">🐻 BEAR WIN</span>
+            <span class="arena-history-detail">Target $150 | Final $142.80</span>
+          </div>
+          <div class="arena-history-item arena-history-bull">
+            <span class="arena-history-round">#85</span>
+            <span class="arena-history-result">🐂 BULL WIN</span>
+            <span class="arena-history-detail">Target $138 | Final $143.50</span>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /arena-connected -->
+  </main>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ARENA FOOTER                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer class="footer arena-footer">
+    <div class="container footer-inner">
+      <a href="index.html" class="arena-footer-back">← Back to BoB Landing Page</a>
+      <p class="footer-text">© 2026 BoB (Bull or Bear) — Arena on Solana</p>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TOAST                                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="toast" class="toast" style="display:none;">
+    <span id="toast-text"></span>
+  </div>
+
+  <script src="arena.js"></script>
+</body>
+</html>

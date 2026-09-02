@@ -110,9 +110,21 @@
   const adminTaglineInput = $('#admin-tagline-input');
 
   const adminVaultInput = $('#admin-vault-input');
+  const adminVaultL2Input = $('#admin-vault-l2-input');
+  const adminRerollWalletInput = $('#admin-reroll-wallet-input');
+  const adminExtendWalletInput = $('#admin-extend-wallet-input');
   const payoutModeAuto = $('#payout-mode-auto');
   const payoutModeManual = $('#payout-mode-manual');
   const adminPauseStakingToggle = $('#admin-pause-staking-toggle');
+
+  // Round Management Inputs
+  const adminTargetPriceInput = $('#admin-target-price-input');
+  const adminRoundHoursInput = $('#admin-round-hours-input');
+  const adminMaxRerollsInput = $('#admin-max-rerolls-input');
+  const adminVoteFeeInput = $('#admin-vote-fee-input');
+  const adminSettleBullBtn = $('#admin-settle-bull-btn');
+  const adminSettleBearBtn = $('#admin-settle-bear-btn');
+  const adminResetRoundBtn = $('#admin-reset-round-btn');
 
   const routeWinnerPct = $('#route-winner-pct');
   const routeBurnPct = $('#route-burn-pct');
@@ -147,10 +159,18 @@
     gameUrl: '',
     gameVisible: false,
     tagline: 'The Ultimate GameFi Prediction Market',
-    // Staking Vault & Approval
-    vaultAddress: 'BoBVaultSolanaMainnetTreasury1111111111111',
+    // Multi-Wallet Security Architecture (4 Wallets)
+    vaultAddress: '4Nd1mBQtrMJydn72p2tQe3JmS58aG3h7hP7F9vW6X1kQ', // Hot Vault (Intake)
+    vaultLayer2: '8YvM6P6fK2L9x1W3n7H4mB5tQ8e2J9rT4vX6X1kQ2mS',  // Cold Vault (Safety)
+    voteRerollWallet: '3Fz9xL2pQ8mK1w7N4tB6vY9rT2e5J8h7hP7F9vW6X1k', // Reroll Fee
+    voteExtendWallet: '9Kp2xT4vL6mQ1w8N3tB5vY7rT1e4J9h6hP8F9vW5X2m', // Extend Fee
     payoutMode: 'auto', // 'auto' | 'manual'
     isStakingPaused: false,
+    // Round Management
+    solTargetPrice: 148.50,
+    roundHours: 6,
+    maxRerolls: 3,
+    voteFeeSol: 0.007,
     // Routing
     winnerPct: 8,
     burnPct: 1,
@@ -441,10 +461,10 @@
   }
 
   function initWallet() {
-    walletConnectBtn.addEventListener('click', handleDirectConnect);
-    walletConnectBtnMobile.addEventListener('click', handleDirectConnect);
-    stakingConnectBtn.addEventListener('click', handleDirectConnect);
-    walletDisconnectBtn.addEventListener('click', disconnectWallet);
+    if (walletConnectBtn) walletConnectBtn.addEventListener('click', handleDirectConnect);
+    if (walletConnectBtnMobile) walletConnectBtnMobile.addEventListener('click', handleDirectConnect);
+    if (stakingConnectBtn) stakingConnectBtn.addEventListener('click', handleDirectConnect);
+    if (walletDisconnectBtn) walletDisconnectBtn.addEventListener('click', disconnectWallet);
 
     // Auto-check if Phantom was already authorized
     if (window.solana && window.solana.isPhantom && window.solana.isConnected) {
@@ -546,8 +566,8 @@
   async function fetchLiveWalletBalances() {
     if (!walletAddress) return;
 
-    stakingAvailable.textContent = 'Fetching RPC...';
-    walletSolBalance.textContent = 'Fetching RPC...';
+    if (stakingAvailable) stakingAvailable.textContent = 'Fetching RPC...';
+    if (walletSolBalance) walletSolBalance.textContent = 'Fetching RPC...';
 
     try {
       if (!connection) initSolanaConnection();
@@ -566,9 +586,9 @@
     }
 
     // Update displays
-    stakingAvailable.textContent = `${formatSol(realSolBalance)} SOL`;
-    walletSolBalance.textContent = `${formatSol(realSolBalance)} SOL`;
-    walletBobBalance.textContent = `${Math.floor(realSolBalance * 50000).toLocaleString()} $BoB`;
+    if (stakingAvailable) stakingAvailable.textContent = `${formatSol(realSolBalance)} SOL`;
+    if (walletSolBalance) walletSolBalance.textContent = `${formatSol(realSolBalance)} SOL`;
+    if (walletBobBalance) walletBobBalance.textContent = `${Math.floor(realSolBalance * 50000).toLocaleString()} $BoB`;
   }
 
   function disconnectWallet() {
@@ -580,28 +600,30 @@
     walletAddress = '';
     activeWalletProvider = null;
 
-    walletBtnText.textContent = 'Connect Wallet';
-    walletBtnTextMobile.textContent = 'Connect';
-    walletConnectBtn.classList.remove('connected');
-    walletConnectBtnMobile.classList.remove('connected');
+    if (walletBtnText) walletBtnText.textContent = 'Connect Wallet';
+    if (walletBtnTextMobile) walletBtnTextMobile.textContent = 'Connect';
+    if (walletConnectBtn) walletConnectBtn.classList.remove('connected');
+    if (walletConnectBtnMobile) walletConnectBtnMobile.classList.remove('connected');
 
-    stakingNotConnected.style.display = 'block';
-    stakingConnected.style.display = 'none';
+    if (stakingNotConnected) stakingNotConnected.style.display = 'block';
+    if (stakingConnected) stakingConnected.style.display = 'none';
 
     closeModal('wallet-info-modal');
     showToast('Wallet disconnected');
   }
 
   function updateWalletInfoModal() {
-    walletDisplayAddress.textContent = walletAddress;
-    walletSolBalance.textContent = `${formatSol(realSolBalance)} SOL`;
-    walletBobBalance.textContent = `${Math.floor(realSolBalance * 50000).toLocaleString()} $BoB`;
+    if (walletDisplayAddress) walletDisplayAddress.textContent = walletAddress;
+    if (walletSolBalance) walletSolBalance.textContent = `${formatSol(realSolBalance)} SOL`;
+    if (walletBobBalance) walletBobBalance.textContent = `${Math.floor(realSolBalance * 50000).toLocaleString()} $BoB`;
   }
 
   /* ═══════════════════════════════════════════════
      6. REAL STAKING & TRANSACTION DISPATCHER
      ═══════════════════════════════════════════════ */
   function initStaking() {
+    if (!stakeBtn) return; // Staking engine is hosted in arena.html
+
     // Faction choose
     $$('.staking-faction-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -812,6 +834,67 @@
       showToast('Master settings saved to blockchain configuration! 💾');
     });
 
+    // Round Settlement Controllers
+    if (adminSettleBullBtn) {
+      adminSettleBullBtn.addEventListener('click', () => {
+        try {
+          const current = JSON.parse(localStorage.getItem('bob_arena_round_state') || '{}');
+          localStorage.setItem('bob_arena_round_state', JSON.stringify({
+            ...current,
+            roundEnded: true,
+            winner: 'bull',
+            roundEndsAt: Date.now() - 1000
+          }));
+          showToast('Declared BULL Win for active round! 🐂');
+        } catch (e) {
+          showToast('Round state update failed', true);
+        }
+      });
+    }
+
+    if (adminSettleBearBtn) {
+      adminSettleBearBtn.addEventListener('click', () => {
+        try {
+          const current = JSON.parse(localStorage.getItem('bob_arena_round_state') || '{}');
+          localStorage.setItem('bob_arena_round_state', JSON.stringify({
+            ...current,
+            roundEnded: true,
+            winner: 'bear',
+            roundEndsAt: Date.now() - 1000
+          }));
+          showToast('Declared BEAR Win for active round! 🐻');
+        } catch (e) {
+          showToast('Round state update failed', true);
+        }
+      });
+    }
+
+    if (adminResetRoundBtn) {
+      adminResetRoundBtn.addEventListener('click', () => {
+        try {
+          const s = getAdminSettings();
+          const duration = (s.roundHours || 6) * 3600 * 1000;
+          localStorage.setItem('bob_arena_round_state', JSON.stringify({
+            roundEndsAt: Date.now() + duration,
+            roundEnded: false,
+            winner: null,
+            bullPool: 2500000,
+            bearPool: 1800000,
+            voting: {
+              rerollVotes: 0,
+              rerollUsed: 0,
+              extendVotes: 0,
+              extendedHours: 0,
+              buybackPoolSol: 12.5
+            }
+          }));
+          showToast('Fresh prediction round started! (6 Hours timer reset) 🔄');
+        } catch (e) {
+          showToast('Failed to start new round', true);
+        }
+      });
+    }
+
     // Logout
     adminLogoutBtn.addEventListener('click', () => {
       isAdminLoggedIn = false;
@@ -903,8 +986,12 @@
 
     adminTaglineInput.value = s.tagline || heroTagline.textContent;
 
-    // Tab 2: Vault
+    // Tab 2: Multi-Vault (4 Wallets)
     adminVaultInput.value = s.vaultAddress || '';
+    if (adminVaultL2Input) adminVaultL2Input.value = s.vaultLayer2 || '';
+    if (adminRerollWalletInput) adminRerollWalletInput.value = s.voteRerollWallet || '';
+    if (adminExtendWalletInput) adminExtendWalletInput.value = s.voteExtendWallet || '';
+
     if (s.payoutMode === 'manual') {
       payoutModeManual.checked = true;
     } else {
@@ -912,6 +999,12 @@
     }
     adminPauseStakingToggle.textContent = s.isStakingPaused ? 'Paused' : 'Active';
     adminPauseStakingToggle.classList.toggle('active', !!s.isStakingPaused);
+
+    // Tab 2.5: Round Management
+    if (adminTargetPriceInput) adminTargetPriceInput.value = s.solTargetPrice || 148.50;
+    if (adminRoundHoursInput) adminRoundHoursInput.value = s.roundHours || 6;
+    if (adminMaxRerollsInput) adminMaxRerollsInput.value = s.maxRerolls || 3;
+    if (adminVoteFeeInput) adminVoteFeeInput.value = s.voteFeeSol || 0.007;
 
     // Tab 3: Routing
     routeWinnerPct.value = s.winnerPct || 8;
@@ -941,9 +1034,19 @@
       gameVisible: adminGameToggle.classList.contains('active'),
       tagline: adminTaglineInput.value.trim(),
 
+      // Multi-Vault
       vaultAddress: adminVaultInput.value.trim() || DEFAULT_SETTINGS.vaultAddress,
+      vaultLayer2: adminVaultL2Input ? adminVaultL2Input.value.trim() : DEFAULT_SETTINGS.vaultLayer2,
+      voteRerollWallet: adminRerollWalletInput ? adminRerollWalletInput.value.trim() : DEFAULT_SETTINGS.voteRerollWallet,
+      voteExtendWallet: adminExtendWalletInput ? adminExtendWalletInput.value.trim() : DEFAULT_SETTINGS.voteExtendWallet,
       payoutMode: payoutModeManual.checked ? 'manual' : 'auto',
       isStakingPaused: adminPauseStakingToggle.classList.contains('active'),
+
+      // Round Management
+      solTargetPrice: parseFloat(adminTargetPriceInput?.value) || 148.50,
+      roundHours: parseFloat(adminRoundHoursInput?.value) || 6,
+      maxRerolls: parseInt(adminMaxRerollsInput?.value, 10) || 3,
+      voteFeeSol: parseFloat(adminVoteFeeInput?.value) || 0.007,
 
       winnerPct: parseFloat(routeWinnerPct.value) || 8,
       burnPct: parseFloat(routeBurnPct.value) || 1,
@@ -958,6 +1061,22 @@
     };
 
     saveAdminSettings(s);
+
+    // Sync directly to Arena Game config
+    try {
+      localStorage.setItem('bob_admin_config', JSON.stringify({
+        vaultLayer1: s.vaultAddress,
+        vaultLayer2: s.vaultLayer2,
+        voteRerollWallet: s.voteRerollWallet,
+        voteExtendWallet: s.voteExtendWallet,
+        solTargetPrice: s.solTargetPrice,
+        roundDurationSec: s.roundHours * 3600,
+        maxRerolls: s.maxRerolls,
+        voteFeeSol: s.voteFeeSol
+      }));
+    } catch (e) {
+      console.warn('Could not sync to arena config:', e);
+    }
   }
 
   function applyAdminSettings() {
@@ -965,11 +1084,11 @@
 
     // Emergency Circuit Breaker Display
     if (s.isCircuitBreakerActive) {
-      emergencyBanner.style.display = 'block';
-      stakingHaltedBanner.style.display = 'block';
+      if (emergencyBanner) emergencyBanner.style.display = 'block';
+      if (stakingHaltedBanner) stakingHaltedBanner.style.display = 'block';
     } else {
-      emergencyBanner.style.display = 'none';
-      stakingHaltedBanner.style.display = 'none';
+      if (emergencyBanner) emergencyBanner.style.display = 'none';
+      if (stakingHaltedBanner) stakingHaltedBanner.style.display = 'none';
     }
 
     // CA Banner
