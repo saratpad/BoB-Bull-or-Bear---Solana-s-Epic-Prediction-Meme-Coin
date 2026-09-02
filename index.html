@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BoB — Bull or Bear | Solana Meme Coin</title>
+  <meta name="description" content="BoB (Bull or Bear) — The ultimate GameFi Prediction Market on Solana. Choose your faction. Stake your claim. Enter the Arena." />
+  <meta name="theme-color" content="#06060c" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ADMIN PROMO BANNER (hidden by default)      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="promo-banner" class="promo-banner" style="display:none;">
+    <div class="promo-banner-inner">
+      <span id="promo-banner-text"></span>
+      <button id="promo-banner-close" class="promo-banner-close" aria-label="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CA ADDRESS BANNER (hidden by default)       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="ca-banner" class="ca-banner" style="display:none;">
+    <div class="ca-banner-inner">
+      <span class="ca-banner-label">CA:</span>
+      <code id="ca-banner-address" class="ca-banner-address"></code>
+      <button id="ca-copy-btn" class="ca-copy-btn" aria-label="Copy">📋</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LOADING SCREEN                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="loader" class="loader">
+    <div class="loader-inner">
+      <img src="logo.jpeg" alt="BoB Logo" class="loader-logo" />
+      <h2 class="loader-title">BULL <span class="loader-or">or</span> BEAR</h2>
+      <div class="loader-bar-track">
+        <div id="loader-bar-fill" class="loader-bar-fill"></div>
+      </div>
+      <p id="loader-percent" class="loader-percent">0%</p>
+      <p class="loader-sub">LOADING THE ARENA...</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SOUND TOGGLE (Fixed)                        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <audio id="bg-audio" loop preload="auto">
+    <source src="Green_bull_and_red_bear_202608242043.mp4" type="video/mp4" />
+  </audio>
+  <button id="sound-toggle" class="sound-toggle" aria-label="Toggle Sound">
+    <svg id="sound-icon-on" class="sound-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </svg>
+    <svg id="sound-icon-off" class="sound-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <line x1="23" y1="9" x2="17" y2="15"/>
+      <line x1="17" y1="9" x2="23" y2="15"/>
+    </svg>
+  </button>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- NAVIGATION BAR                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="logo.jpeg" alt="BoB" class="nav-logo" />
+        <span class="nav-brand-text">B<span class="text-green">o</span>B</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="#about" class="nav-link">About</a>
+        <a href="#factions" class="nav-link">Factions</a>
+        <a href="#mechanics" class="nav-link">Mechanics</a>
+        <a href="#roadmap" class="nav-link">Roadmap</a>
+        <button id="wallet-connect-btn" class="btn btn-wallet">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 10h4v4h-4z"/><circle cx="18" cy="12" r="1"/></svg>
+          <span id="wallet-btn-text">Connect Wallet</span>
+        </button>
+      </div>
+      <div class="nav-right-mobile">
+        <button id="wallet-connect-btn-mobile" class="btn btn-wallet btn-wallet-mobile">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M16 10h4v4h-4z"/><circle cx="18" cy="12" r="1"/></svg>
+          <span id="wallet-btn-text-mobile">Connect</span>
+        </button>
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WALLET CONNECT MODAL                        -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="wallet-modal" class="modal-overlay" style="display:none;">
+    <div class="modal wallet-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Connect Wallet</h3>
+        <button class="modal-close" data-close="wallet-modal">✕</button>
+      </div>
+      <p class="modal-desc">Choose a wallet to connect to BoB Arena</p>
+      <div class="wallet-options">
+        <button class="wallet-option" data-wallet="phantom">
+          <div class="wallet-option-icon">👻</div>
+          <div class="wallet-option-info">
+            <span class="wallet-option-name">Phantom</span>
+            <span class="wallet-option-status" id="phantom-status">Detected</span>
+          </div>
+          <span class="wallet-option-arrow">→</span>
+        </button>
+        <button class="wallet-option" data-wallet="solflare">
+          <div class="wallet-option-icon">🌞</div>
+          <div class="wallet-option-info">
+            <span class="wallet-option-name">Solflare</span>
+            <span class="wallet-option-status">Popular</span>
+          </div>
+          <span class="wallet-option-arrow">→</span>
+        </button>
+        <button class="wallet-option" data-wallet="backpack">
+          <div class="wallet-option-icon">🎒</div>
+          <div class="wallet-option-info">
+            <span class="wallet-option-name">Backpack</span>
+            <span class="wallet-option-status">Multi-chain</span>
+          </div>
+          <span class="wallet-option-arrow">→</span>
+        </button>
+      </div>
+      <p class="wallet-disclaimer">By connecting, you agree to the Terms of Service</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WALLET INFO MODAL (after connected)         -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="wallet-info-modal" class="modal-overlay" style="display:none;">
+    <div class="modal wallet-info-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Wallet Connected</h3>
+        <button class="modal-close" data-close="wallet-info-modal">✕</button>
+      </div>
+      <div class="wallet-info-content">
+        <div class="wallet-info-address">
+          <span class="wallet-info-label">Address</span>
+          <code id="wallet-display-address">—</code>
+        </div>
+        <div class="wallet-info-balance">
+          <div class="wallet-balance-item">
+            <span class="wallet-balance-label">SOL Balance</span>
+            <span class="wallet-balance-value" id="wallet-sol-balance">—</span>
+          </div>
+          <div class="wallet-balance-item">
+            <span class="wallet-balance-label">$BoB Balance</span>
+            <span class="wallet-balance-value wallet-balance-bob" id="wallet-bob-balance">—</span>
+          </div>
+        </div>
+        <button id="wallet-disconnect-btn" class="btn btn-ghost btn-disconnect">Disconnect Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HERO SECTION — Video Background              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="hero" class="hero">
+    <div class="hero-video-wrap">
+      <video class="hero-video" autoplay muted loop playsinline>
+        <source src="Green_bull_and_red_bear_202608242043.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-overlay"></div>
+    </div>
+
+    <div class="hero-content" data-anim="hero">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        BUILT ON SOLANA
+      </div>
+      <h1 class="hero-title">
+        B<span class="text-green">o</span>B
+      </h1>
+      <p class="hero-subtitle">BULL <span class="text-dim">or</span> BEAR</p>
+      <p class="hero-tagline" id="hero-tagline">The Ultimate GameFi Prediction Market</p>
+
+      <div class="hero-actions">
+        <a href="#staking" class="btn btn-primary">
+          <span class="btn-shimmer"></span>
+          Enter the Arena
+        </a>
+        <a href="#about" class="btn btn-ghost">Learn More</a>
+        <!-- Game Button (admin controlled, hidden by default) -->
+        <a href="#" id="game-entry-btn" class="btn btn-game" style="display:none;">
+          <span class="btn-shimmer"></span>
+          🎮 Play Now
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-value">1B</span>
+          <span class="hero-stat-label">Total Supply</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">SOL</span>
+          <span class="hero-stat-label">Network</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">∞</span>
+          <span class="hero-stat-label">Possibilities</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-scroll-indicator">
+      <span>SCROLL</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ABOUT / OVERVIEW SECTION                     -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="about" class="about-section">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-image-col" data-anim="left">
+          <div class="about-image-wrapper">
+            <img src="Gemini_Generated_Image_uhgpyuhgpyuhgpyu.jpeg" alt="BoB Arena Overview" class="about-image" />
+            <div class="about-image-glow"></div>
+          </div>
+        </div>
+        <div class="about-text-col" data-anim="right">
+          <p class="section-tag">WHAT IS BoB?</p>
+          <h2 class="section-title">More Than Just<br/>A <span class="text-gradient">Meme Coin</span></h2>
+          <div class="section-divider"></div>
+          <p class="about-desc">
+            BoB isn't your ordinary meme coin. It's a <strong>GameFi Prediction Market</strong> ecosystem powered by Solana — designed to weaponize market psychology through faction-based betting, deflationary tokenomics, and real-time prediction battles.
+          </p>
+          <p class="about-desc">
+            Every dip and pump becomes a battlefield. Every trader becomes a warrior. <strong>Stake your $BoB, predict the market, and dominate the arena.</strong>
+          </p>
+          <div class="about-features">
+            <div class="about-feature">
+              <div class="about-feature-icon">⚡</div>
+              <div>
+                <h4>Solana Powered</h4>
+                <p>Lightning-fast transactions with near-zero fees</p>
+              </div>
+            </div>
+            <div class="about-feature">
+              <div class="about-feature-icon">🔥</div>
+              <div>
+                <h4>Deflationary Burns</h4>
+                <p>Supply shrinks every round — value rises perpetually</p>
+              </div>
+            </div>
+            <div class="about-feature">
+              <div class="about-feature-icon">🎯</div>
+              <div>
+                <h4>Predict &amp; Earn</h4>
+                <p>Winners take 8% of the losers' pool every round</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FACTIONS SECTION                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="factions" class="factions-section">
+    <div class="container">
+      <div class="section-header" data-anim="up">
+        <p class="section-tag">CHOOSE YOUR SIDE</p>
+        <h2 class="section-title">THE <span class="text-green">FACTIONS</span></h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="factions-grid">
+        <!-- BULL FACTION -->
+        <div class="faction-card faction-bull" data-anim="left">
+          <div class="faction-card-border faction-border-green"></div>
+          <div class="faction-card-inner">
+            <div class="faction-image-wrap">
+              <img src="Requesting_fierce_bull_market_scene_202608231744.jpeg" alt="The Green Bull" class="faction-image" />
+              <div class="faction-image-overlay faction-overlay-green"></div>
+              <div class="faction-label-float">
+                <span class="faction-badge faction-badge-green">
+                  <span class="faction-badge-dot"></span>
+                  BULLISH
+                </span>
+              </div>
+            </div>
+            <div class="faction-info">
+              <h3 class="faction-name faction-name-green">THE BULL<br/>FACTION</h3>
+              <p class="faction-desc">
+                Ride the lightning. The Bull Faction believes in perpetual momentum — every dip is fuel, every candle is a war cry. Stake your $BoB, predict the surge, and crush the bears.
+              </p>
+              <div class="faction-stats">
+                <div class="faction-stat">
+                  <span class="faction-stat-value faction-stat-green">∞</span>
+                  <span class="faction-stat-label">UPSIDE</span>
+                </div>
+                <div class="faction-stat">
+                  <span class="faction-stat-value faction-stat-green">⚡</span>
+                  <span class="faction-stat-label">POWER</span>
+                </div>
+                <div class="faction-stat">
+                  <span class="faction-stat-value faction-stat-green">💎</span>
+                  <span class="faction-stat-label">HANDS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VS Badge -->
+        <div class="vs-badge" data-anim="up">
+          <span>VS</span>
+        </div>
+
+        <!-- BEAR FACTION -->
+        <div class="faction-card faction-bear" data-anim="right">
+          <div class="faction-card-border faction-border-red"></div>
+          <div class="faction-card-inner">
+            <div class="faction-image-wrap">
+              <img src="Powerful_bear_market_scene_202608231744.jpeg" alt="The Red Bear" class="faction-image" />
+              <div class="faction-image-overlay faction-overlay-red"></div>
+              <div class="faction-label-float">
+                <span class="faction-badge faction-badge-red">
+                  <span class="faction-badge-dot"></span>
+                  BEARISH
+                </span>
+              </div>
+            </div>
+            <div class="faction-info">
+              <h3 class="faction-name faction-name-red">THE BEAR<br/>FACTION</h3>
+              <p class="faction-desc">
+                Embrace the fire. The Bear Faction thrives in chaos — every crash is an opportunity, every red candle fuels the inferno. Stake your $BoB, predict the fall, and dominate.
+              </p>
+              <div class="faction-stats">
+                <div class="faction-stat">
+                  <span class="faction-stat-value faction-stat-red">🔥</span>
+                  <span class="faction-stat-label">CHAOS</span>
+                </div>
+                <div class="faction-stat">
+                  <span class="faction-stat-value faction-stat-red">🩸</span>
+                  <span class="faction-stat-label">BLOOD</span>
+                </div>
+                <div class="faction-stat">
+                  <span class="faction-stat-value faction-stat-red">💀</span>
+                  <span class="faction-stat-label">REKT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STAKING SECTION                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="staking" class="staking-section">
+    <div class="container">
+      <div class="section-header" data-anim="up">
+        <p class="section-tag">THE ARENA</p>
+        <h2 class="section-title">STAKE YOUR <span class="text-gradient">$BoB</span></h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="staking-card" data-anim="up">
+        <!-- Not connected state -->
+        <div id="staking-not-connected" class="staking-state">
+          <div class="staking-lock-icon">🔒</div>
+          <h3 class="staking-state-title">Connect Your Wallet</h3>
+          <p class="staking-state-desc">Connect your Solana wallet to start staking $BoB and enter the prediction arena.</p>
+          <button id="staking-connect-btn" class="btn btn-primary">
+            <span class="btn-shimmer"></span>
+            Connect Wallet
+          </button>
+        </div>
+
+        <!-- Connected state -->
+        <div id="staking-connected" class="staking-state" style="display:none;">
+          <!-- Balance Bar -->
+          <div class="staking-balance-bar">
+            <div class="staking-balance-item">
+              <span class="staking-balance-label">Available</span>
+              <span class="staking-balance-value" id="staking-available">0 BoB</span>
+            </div>
+            <div class="staking-balance-sep"></div>
+            <div class="staking-balance-item">
+              <span class="staking-balance-label">Staked</span>
+              <span class="staking-balance-value staking-staked-val" id="staking-staked">0 BoB</span>
+            </div>
+            <div class="staking-balance-sep"></div>
+            <div class="staking-balance-item">
+              <span class="staking-balance-label">Rewards</span>
+              <span class="staking-balance-value staking-rewards-val" id="staking-rewards">0 BoB</span>
+            </div>
+          </div>
+
+          <!-- Faction Choose -->
+          <div class="staking-faction-choose">
+            <p class="staking-faction-label">Choose Your Faction</p>
+            <div class="staking-faction-btns">
+              <button class="staking-faction-btn staking-faction-bull active" data-side="bull">
+                <span class="staking-faction-emoji">🐂</span>
+                <span>BULL</span>
+              </button>
+              <button class="staking-faction-btn staking-faction-bear" data-side="bear">
+                <span class="staking-faction-emoji">🐻</span>
+                <span>BEAR</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Stake Input -->
+          <div class="staking-input-group">
+            <label class="staking-input-label">Amount to Stake</label>
+            <div class="staking-input-wrap">
+              <input type="number" id="staking-amount" class="staking-input" placeholder="0.00" min="0" step="any" />
+              <button id="staking-max-btn" class="staking-max-btn">MAX</button>
+            </div>
+            <div class="staking-quick-amounts">
+              <button class="staking-quick-btn" data-pct="25">25%</button>
+              <button class="staking-quick-btn" data-pct="50">50%</button>
+              <button class="staking-quick-btn" data-pct="75">75%</button>
+              <button class="staking-quick-btn" data-pct="100">100%</button>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="staking-actions">
+            <button id="stake-btn" class="btn btn-primary staking-action-btn">
+              <span class="btn-shimmer"></span>
+              ⚡ Stake
+            </button>
+            <button id="unstake-btn" class="btn btn-ghost staking-action-btn">Unstake</button>
+          </div>
+
+          <!-- Staking Info -->
+          <div class="staking-info-row">
+            <span>Current Round</span>
+            <span class="staking-info-value">#42</span>
+          </div>
+          <div class="staking-info-row">
+            <span>Round Ends In</span>
+            <span class="staking-info-value staking-timer" id="staking-timer">05:32:18</span>
+          </div>
+          <div class="staking-info-row">
+            <span>Total Pool</span>
+            <span class="staking-info-value">2,450,000 BoB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- GAME MECHANICS SECTION                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="mechanics" class="mechanics-section">
+    <div class="container">
+      <div class="section-header" data-anim="up">
+        <p class="section-tag">THE GAME MECHANICS</p>
+        <h2 class="section-title">STAKE. PREDICT. <span class="text-red">DOMINATE.</span></h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="mechanics-grid">
+        <div class="mechanic-card" data-anim="up" style="--delay: 0">
+          <div class="mechanic-number">01</div>
+          <div class="mechanic-icon">🎯</div>
+          <h4 class="mechanic-title">Stake to Play</h4>
+          <p class="mechanic-desc">Lock your $BoB tokens in the Arena. The more you stake, the more voting power you wield. 1 BoB = 1 Vote.</p>
+        </div>
+        <div class="mechanic-card" data-anim="up" style="--delay: 1">
+          <div class="mechanic-number">02</div>
+          <div class="mechanic-icon">⚖️</div>
+          <h4 class="mechanic-title">Predict &amp; Win</h4>
+          <p class="mechanic-desc">Predict SOL price direction each round. Winners take 8% of the losers' staked pool as a bonus reward.</p>
+        </div>
+        <div class="mechanic-card" data-anim="up" style="--delay: 2">
+          <div class="mechanic-number">03</div>
+          <div class="mechanic-icon">🔥</div>
+          <h4 class="mechanic-title">Deflationary Burn</h4>
+          <p class="mechanic-desc">1% of every losing pool is burned forever. Supply shrinks. Value rises. The cycle continues.</p>
+        </div>
+        <div class="mechanic-card" data-anim="up" style="--delay: 3">
+          <div class="mechanic-number">04</div>
+          <div class="mechanic-icon">♻️</div>
+          <h4 class="mechanic-title">Auto Buyback</h4>
+          <p class="mechanic-desc">Vote fees (1 USD in SOL) automatically buy back $BoB from the market — constant buy pressure, every round.</p>
+        </div>
+      </div>
+
+      <!-- Slashing Breakdown -->
+      <div class="slash-breakdown" data-anim="up">
+        <h3 class="slash-title">Slashing &amp; Yield Breakdown</h3>
+        <p class="slash-subtitle">When a round ends, the losing side gets slashed 10% of their staked pool:</p>
+        <div class="slash-grid">
+          <div class="slash-item slash-green">
+            <span class="slash-pct">8%</span>
+            <span class="slash-label">Winners Pool<br/><small>Distributed as bonus</small></span>
+          </div>
+          <div class="slash-item slash-orange">
+            <span class="slash-pct">1%</span>
+            <span class="slash-label">Burned Forever<br/><small>Deflationary mechanism</small></span>
+          </div>
+          <div class="slash-item slash-blue">
+            <span class="slash-pct">0.5%</span>
+            <span class="slash-label">Dev &amp; Maintenance<br/><small>Keeps the engine running</small></span>
+          </div>
+          <div class="slash-item slash-purple">
+            <span class="slash-pct">0.5%</span>
+            <span class="slash-label">Network Fees<br/><small>Transaction costs</small></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ROADMAP SECTION                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="roadmap" class="roadmap-section">
+    <div class="container">
+      <div class="section-header" data-anim="up">
+        <p class="section-tag">THE JOURNEY</p>
+        <h2 class="section-title">ROAD<span class="text-gradient">MAP</span></h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="roadmap-timeline">
+        <div class="roadmap-line"></div>
+
+        <div class="roadmap-item" data-anim="left">
+          <div class="roadmap-dot roadmap-dot-active"></div>
+          <div class="roadmap-card">
+            <div class="roadmap-phase">Q1</div>
+            <h4 class="roadmap-title">Launch &amp; Foundation</h4>
+            <ul class="roadmap-list">
+              <li>Create 3D Assets &amp; Image Sequence</li>
+              <li>Build Web3 Landing Page</li>
+              <li>Launch token on Pump.fun</li>
+              <li>"Which Side are You On?" Campaign</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-right" data-anim="right">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-card">
+            <div class="roadmap-phase">Q2</div>
+            <h4 class="roadmap-title">BoB Arena V1</h4>
+            <ul class="roadmap-list">
+              <li>Launch DApp "BoB Arena"</li>
+              <li>Wallet Connection &amp; Staking</li>
+              <li>Voting Mechanics &amp; Auto Buyback</li>
+              <li>Diamond Hands Leaderboard</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item" data-anim="left">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-card">
+            <div class="roadmap-phase">Q3</div>
+            <h4 class="roadmap-title">Expansion &amp; DeFi</h4>
+            <ul class="roadmap-list">
+              <li>CEX Listings</li>
+              <li>Raydium Liquidity Pool</li>
+              <li>"BoB Gladiators" NFT Collection</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-right" data-anim="right">
+          <div class="roadmap-dot"></div>
+          <div class="roadmap-card">
+            <div class="roadmap-phase">Q4</div>
+            <h4 class="roadmap-title">Ultimate Ecosystem</h4>
+            <ul class="roadmap-list">
+              <li>DAO Governance</li>
+              <li>Telegram Mini-game Bot</li>
+              <li>Cross-chain Bridge</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CTA SECTION                                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="arena" class="cta-section">
+    <div class="cta-bg">
+      <div class="cta-orb cta-orb-green"></div>
+      <div class="cta-orb cta-orb-red"></div>
+    </div>
+    <div class="container cta-content" data-anim="up">
+      <img src="logo.jpeg" alt="BoB Logo" class="cta-logo" />
+      <p class="section-tag">THE BATTLE AWAITS</p>
+      <h2 class="cta-heading">READY TO<br/><span class="text-gradient">CHOOSE YOUR SIDE?</span></h2>
+
+      <a href="#staking" class="btn btn-primary btn-lg">
+        <span class="btn-shimmer"></span>
+        ENTER BoB ARENA
+        <small class="btn-sub">(STAKE NOW)</small>
+      </a>
+
+      <div class="cta-socials">
+        <a href="#" class="social-link" aria-label="Twitter/X">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Telegram">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Discord">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FOOTER                                       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="logo.jpeg" alt="BoB" class="footer-logo" />
+        <span class="footer-brand-text">B<span class="text-green">o</span>B</span>
+      </div>
+      <div class="footer-links">
+        <a href="#about">About</a>
+        <a href="#factions">Factions</a>
+        <a href="#mechanics">Mechanics</a>
+        <a href="#roadmap">Roadmap</a>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-text">© 2026 BoB (Bull or Bear) — Built on Solana</p>
+        <p class="footer-disclaimer">This is a meme coin. Not financial advice. DYOR.</p>
+      </div>
+      <!-- Admin Entry (hidden trigger) -->
+      <button id="admin-trigger" class="admin-trigger" aria-label="Admin">🔐</button>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ADMIN LOGIN MODAL                            -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="admin-login-modal" class="modal-overlay" style="display:none;">
+    <div class="modal admin-login-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">🔐 Admin Access</h3>
+        <button class="modal-close" data-close="admin-login-modal">✕</button>
+      </div>
+      <div class="admin-login-form">
+        <label class="admin-label">Enter Password</label>
+        <input type="password" id="admin-password" class="admin-input" placeholder="••••••••" autocomplete="off" />
+        <p id="admin-login-error" class="admin-error" style="display:none;">Incorrect password</p>
+        <button id="admin-login-btn" class="btn btn-primary" style="width:100%; margin-top:1rem;">
+          <span class="btn-shimmer"></span>
+          Login
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ADMIN PANEL MODAL                            -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="admin-panel-modal" class="modal-overlay" style="display:none;">
+    <div class="modal admin-panel-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Admin Panel</h3>
+        <button class="modal-close" data-close="admin-panel-modal">✕</button>
+      </div>
+      <div class="admin-panel-content">
+
+        <!-- CA Address -->
+        <div class="admin-group">
+          <label class="admin-label">📋 Contract Address (CA)</label>
+          <div class="admin-row">
+            <input type="text" id="admin-ca-input" class="admin-input" placeholder="Enter contract address..." />
+            <button id="admin-ca-toggle" class="admin-toggle-btn">Show</button>
+          </div>
+          <small class="admin-hint">Display a CA address banner on the website</small>
+        </div>
+
+        <!-- Promo Message -->
+        <div class="admin-group">
+          <label class="admin-label">📢 Promo / Announcement</label>
+          <div class="admin-row">
+            <input type="text" id="admin-promo-input" class="admin-input" placeholder="Enter promo message..." />
+            <button id="admin-promo-toggle" class="admin-toggle-btn">Show</button>
+          </div>
+          <small class="admin-hint">Display a promotional banner at the top</small>
+        </div>
+
+        <!-- Game Entry Button -->
+        <div class="admin-group">
+          <label class="admin-label">🎮 Game Entry Button</label>
+          <div class="admin-row">
+            <input type="url" id="admin-game-url" class="admin-input" placeholder="https://game-url.com" />
+            <button id="admin-game-toggle" class="admin-toggle-btn">Show</button>
+          </div>
+          <small class="admin-hint">Show a "Play Now" button in the hero section</small>
+        </div>
+
+        <!-- Hero Tagline -->
+        <div class="admin-group">
+          <label class="admin-label">✏️ Hero Tagline</label>
+          <input type="text" id="admin-tagline-input" class="admin-input" placeholder="The Ultimate GameFi Prediction Market" />
+          <button id="admin-tagline-save" class="btn btn-ghost" style="width:100%; margin-top:0.5rem;">Update Tagline</button>
+        </div>
+
+        <!-- Save & Logout -->
+        <div class="admin-actions">
+          <button id="admin-save-btn" class="btn btn-primary" style="flex:1;">
+            <span class="btn-shimmer"></span>
+            💾 Save All
+          </button>
+          <button id="admin-logout-btn" class="btn btn-ghost btn-danger" style="flex:1;">🚪 Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- TOAST NOTIFICATION                           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="toast" class="toast" style="display:none;">
+    <span id="toast-text"></span>
+  </div>
+
+  <!-- Main Script -->
+  <script src="main.js"></script>
+</body>
+</html>
