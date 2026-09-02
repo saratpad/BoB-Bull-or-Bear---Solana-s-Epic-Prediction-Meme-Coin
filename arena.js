@@ -131,6 +131,17 @@
         if (parsed.solTargetPrice) state.targetPrice = parseFloat(parsed.solTargetPrice);
       }
 
+      // Sync official CA if set in master settings
+      try {
+        const master = JSON.parse(localStorage.getItem('bob_master_settings') || '{}');
+        if (master.ca) {
+          const c1 = document.getElementById('arena-ca-address');
+          const c2 = document.getElementById('arena-ca-address-connected');
+          if (c1) c1.textContent = master.ca;
+          if (c2) c2.textContent = master.ca;
+        }
+      } catch (err) {}
+
       const savedRound = localStorage.getItem(STORAGE_KEYS.ROUND_STATE);
       if (savedRound) {
         const pr = JSON.parse(savedRound);
@@ -706,6 +717,21 @@
     if (el.arenaClaimBtn) el.arenaClaimBtn.addEventListener('click', handleClaim);
     if (el.voteRerollBtn) el.voteRerollBtn.addEventListener('click', handleVoteReroll);
     if (el.voteExtendBtn) el.voteExtendBtn.addEventListener('click', handleVoteExtend);
+
+    // CA Copy Buttons in Arena
+    const copyArenaCA = () => {
+      const codeEl = document.getElementById('arena-ca-address') || document.getElementById('arena-ca-address-connected');
+      const addr = codeEl ? codeEl.textContent.trim() : '4Nd1mBQtrMJydn72p2tQe3JmS58aG3h7hP7F9vW6X1kQ';
+      navigator.clipboard.writeText(addr)
+        .then(() => showToast('Official $BoB CA Copied! 📋✨'))
+        .catch(() => showToast('Failed to copy CA'));
+    };
+
+    const copyBtn1 = document.getElementById('arena-ca-copy-btn');
+    if (copyBtn1) copyBtn1.addEventListener('click', copyArenaCA);
+
+    const copyBtn2 = document.getElementById('arena-ca-copy-btn-connected');
+    if (copyBtn2) copyBtn2.addEventListener('click', copyArenaCA);
   }
 
   // ── INIT ──
