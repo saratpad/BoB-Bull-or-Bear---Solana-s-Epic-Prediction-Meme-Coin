@@ -209,7 +209,36 @@
     }
   }
 
-  // ── CONNECT / DISCONNECT ──
+  // Auto-connect on focus if user just unlocked wallet extension
+  let isWaitingArenaUnlock = false;
+  window.addEventListener('focus', async () => {
+    if (isWaitingArenaUnlock && !state.connected) {
+      const provider = getSolanaProvider();
+      if (provider && provider.publicKey) {
+        isWaitingArenaUnlock = false;
+        state.connected = true;
+        state.pubkey = provider.publicKey.toString();
+        localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'true');
+        await updateWalletBalance(state.pubkey);
+        renderUI();
+        showToast('เชื่อมต่อกระเป๋าสำเร็จแล้ว! 🚀');
+      } else if (provider) {
+        try {
+          const resp = await provider.connect({ onlyIfTrusted: true });
+          if (resp && resp.publicKey) {
+            isWaitingArenaUnlock = false;
+            state.connected = true;
+            state.pubkey = resp.publicKey.toString();
+            localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'true');
+            await updateWalletBalance(state.pubkey);
+            renderUI();
+            showToast('เชื่อมต่อกระเป๋าสำเร็จแล้ว! 🚀');
+          }
+        } catch (e) {}
+      }
+    }
+  });
+
   async function connectWallet() {
     const provider = getSolanaProvider();
     if (!provider) {
@@ -218,19 +247,41 @@
     }
 
     try {
-      showToast('Connecting wallet...');
-      const resp = await provider.connect();
-      const pubkey = resp.publicKey.toString();
-      state.connected = true;
-      state.pubkey = pubkey;
+      showToast('กำลังเชื่อมต่อกระเป๋า... 👻');
+      isWaitingArenaUnlock = true;
+      
+      let resp;
+      try {
+        resp = await provider.connect();
+      } catch (firstErr) {
+        if (firstErr && firstErr.code === -32603) {
+          showToast('🔐 หน้าต่างปลดล็อกกระเป๋าเปิดแล้ว กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบทันที', 4000);
+          return;
+        }
+        throw firstErr;
+      }
 
-      localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'true');
-      await updateWalletBalance(pubkey);
-      renderUI();
-      showToast('Wallet connected: ' + pubkey.slice(0, 4) + '...' + pubkey.slice(-4));
+      const pubkey = resp.publicKey ? resp.publicKey.toString() : (provider.publicKey ? provider.publicKey.toString() : null);
+      if (pubkey) {
+        isWaitingArenaUnlock = false;
+        state.connected = true;
+        state.pubkey = pubkey;
+
+        localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'true');
+        await updateWalletBalance(pubkey);
+        renderUI();
+        showToast('เชื่อมต่อสำเร็จ: ' + pubkey.slice(0, 4) + '...' + pubkey.slice(-4));
+      }
     } catch (err) {
       console.error('Wallet connection failed:', err);
-      showToast('Connection rejected or locked: ' + (err.message || 'Unknown error'));
+      if (err.code === 4001) {
+        isWaitingArenaUnlock = false;
+        showToast('ยกเลิกการเชื่อมต่อโดยผู้ใช้');
+      } else if (err.message && (err.message.includes('Unexpected error') || err.code === -32603)) {
+        showToast('🔐 กรุณาใส่รหัสผ่านปลดล็อกที่หน้าต่างกระเป๋า เพื่อเข้าสู่ระบบทันที', 4000);
+      } else {
+        showToast('แจ้งเตือนกระเป๋า: ' + (err.message || 'กรุณาตรวจสอบรหัสผ่านในกระเป๋าเงิน'));
+      }
     }
   }
 

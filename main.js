@@ -472,6 +472,28 @@
     }
   }
 
+  // Focus listener to auto-connect after user unlocks wallet extension
+  let isWaitingForUnlock = false;
+  window.addEventListener('focus', async () => {
+    if (isWaitingForUnlock && !isWalletConnected) {
+      const phantom = getPhantomProvider();
+      if (phantom && phantom.publicKey) {
+        isWaitingForUnlock = false;
+        handleWalletAuthorized(phantom, 'phantom', phantom.publicKey.toString());
+        showToast('Wallet unlocked & connected successfully! 🚀');
+      } else if (phantom) {
+        try {
+          const resp = await phantom.connect({ onlyIfTrusted: true });
+          if (resp && resp.publicKey) {
+            isWaitingForUnlock = false;
+            handleWalletAuthorized(phantom, 'phantom', resp.publicKey.toString());
+            showToast('Wallet unlocked & connected successfully! 🚀');
+          }
+        } catch (e) {}
+      }
+    }
+  });
+
   async function handleDirectConnect() {
     if (isWalletConnected) {
       updateWalletInfoModal();
@@ -485,52 +507,60 @@
     // Direct Connect flow: Priority Phantom
     if (phantom) {
       try {
-        showToast('Opening Phantom wallet...');
+        showToast('กำลังเชื่อมต่อกระเป๋า Phantom... 👻');
+        isWaitingForUnlock = true;
         
         let resp;
         try {
-          resp = await phantom.connect({ onlyIfTrusted: false });
+          // If already unlocked, resolves immediately. If locked, triggers password unlock popup!
+          resp = await phantom.connect();
         } catch (firstErr) {
-          if (firstErr && firstErr.message && firstErr.message.includes('Unexpected error')) {
-            console.warn('Retrying phantom.connect()...', firstErr);
-            resp = await phantom.connect();
-          } else {
-            throw firstErr;
+          if (firstErr && firstErr.code === -32603) {
+            // Extension opened password prompt
+            showToast('🔐 หน้าต่างปลดล็อกกระเป๋าเปิดแล้ว กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบทันที', false);
+            return;
           }
+          throw firstErr;
         }
 
         const pubkeyStr = (resp && resp.publicKey) ? resp.publicKey.toString() : (phantom.publicKey ? phantom.publicKey.toString() : null);
         if (pubkeyStr) {
+          isWaitingForUnlock = false;
           handleWalletAuthorized(phantom, 'phantom', pubkeyStr);
+          showToast('เชื่อมต่อกระเป๋าสำเร็จ! 🚀');
           return;
         }
       } catch (err) {
         console.warn('Phantom connect error detail:', err);
         
         if (err.code === 4001 || (err.message && err.message.toLowerCase().includes('user rejected'))) {
-          showToast('Connection cancelled by user');
+          isWaitingForUnlock = false;
+          showToast('ยกเลิกการเชื่อมต่อโดยผู้ใช้');
           return;
         }
 
         if (err.message && (err.message.includes('Unexpected error') || err.code === -32603)) {
-          showToast('⚠️ กรุณาปลดล็อก Phantom (Unlock) ที่ไอคอนกระเป๋า แล้วกด Connect อีกครั้ง', true);
+          showToast('🔐 กรุณาใส่รหัสผ่านปลดล็อกที่หน้าต่าง Phantom เพื่อเข้าสู่ระบบทันที', false);
           return;
         }
 
-        showToast('Wallet notice: ' + (err.message || 'Please check wallet extension'), true);
+        showToast('แจ้งเตือนกระเป๋า: ' + (err.message || 'กรุณาตรวจสอบส่วนขยายกระเป๋าเงิน'), true);
         return;
       }
     } else if (solflare) {
       try {
-        showToast('Opening Solflare wallet...');
+        showToast('กำลังเชื่อมต่อกระเป๋า Solflare... 🌞');
+        isWaitingForUnlock = true;
         await solflare.connect();
         if (solflare.publicKey) {
+          isWaitingForUnlock = false;
           handleWalletAuthorized(solflare, 'solflare', solflare.publicKey.toString());
+          showToast('เชื่อมต่อกระเป๋าสำเร็จ! 🚀');
           return;
         }
       } catch (err) {
         if (err.code !== 4001) {
-          showToast('Solflare: ' + (err.message || 'Please unlock wallet'), true);
+          showToast('Solflare: ' + (err.message || 'กรุณาใส่รหัสผ่านปลดล็อกกระเป๋า'), false);
         }
         return;
       }
@@ -917,12 +947,27 @@
       promoBanner.style.display = 'none';
     });
 
+    // Hero CA Copy
+    const heroCaCopyBtn = $('#hero-ca-copy-btn');
+    if (heroCaCopyBtn) {
+      heroCaCopyBtn.addEventListener('click', () => {
+        const addr = $('#hero-ca-address')?.textContent || '';
+        if (addr) {
+          navigator.clipboard.writeText(addr)
+            .then(() => showToast('Official $BoB CA Copied! 📋✨'))
+            .catch(() => showToast('Failed to copy'));
+        }
+      });
+    }
+
     // CA Copy
-    caCopyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(caBannerAddress.textContent)
-        .then(() => showToast('CA Address copied! 📋'))
-        .catch(() => showToast('Failed to copy'));
-    });
+    if (caCopyBtn) {
+      caCopyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(caBannerAddress.textContent)
+          .then(() => showToast('CA Address copied! 📋'))
+          .catch(() => showToast('Failed to copy'));
+      });
+    }
 
     // Restore session if active
     if (sessionStorage.getItem('bob_admin_session') === 'active') {
@@ -1091,7 +1136,12 @@
       if (stakingHaltedBanner) stakingHaltedBanner.style.display = 'none';
     }
 
-    // CA Banner
+    // CA Banner & Hero CA Module
+    const heroCaAddress = $('#hero-ca-address');
+    if (heroCaAddress && s.ca) {
+      heroCaAddress.textContent = s.ca;
+    }
+
     if (s.caVisible && s.ca) {
       caBannerAddress.textContent = s.ca;
       caBanner.style.display = 'block';

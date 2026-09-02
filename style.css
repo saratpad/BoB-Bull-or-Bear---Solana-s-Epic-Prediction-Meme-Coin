@@ -640,32 +640,262 @@ button { font-family: inherit; }
 
 .hero-title {
   font-family: var(--font-display);
-  font-size: clamp(5rem, 14vw, 10rem);
+  font-size: clamp(5.5rem, 15vw, 10.5rem);
   font-weight: 900;
   line-height: 0.9;
-  letter-spacing: 0.04em;
-  color: var(--text-primary);
-  text-shadow:
-    0 0 60px rgba(0, 255, 136, 0.2),
-    0 0 120px rgba(0, 255, 136, 0.08);
-  margin-bottom: 0.25rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* Aggressive Duel Typography (B Green vs B Red) */
+.hero-title-duel {
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.7));
+}
+
+.hero-b-bull {
+  background: linear-gradient(180deg, #ffffff 0%, #00ff88 45%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.7)) drop-shadow(0 0 50px rgba(0, 255, 136, 0.3));
+  position: relative;
+  display: inline-block;
+  transform: skewX(-4deg);
+}
+
+.hero-o-core {
+  font-size: 0.85em;
+  margin: 0 0.05em;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 60%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+  display: inline-block;
+}
+
+.hero-b-bear {
+  background: linear-gradient(180deg, #ffffff 0%, #ff4444 45%, #dc2626 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 25px rgba(255, 68, 68, 0.7)) drop-shadow(0 0 50px rgba(255, 68, 68, 0.3));
+  position: relative;
+  display: inline-block;
+  transform: skewX(4deg);
+}
+
+/* Nav & Footer Brand Duel */
+.nav-brand-text .hero-b-bull,
+.footer-brand-text .hero-b-bull {
+  font-size: 1.1em;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.6));
+}
+
+.nav-brand-text .hero-b-bear,
+.footer-brand-text .hero-b-bear {
+  font-size: 1.1em;
+  filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.6));
 }
 
 .hero-subtitle {
   font-family: var(--font-display);
-  font-size: clamp(1rem, 3vw, 1.8rem);
-  font-weight: 500;
-  letter-spacing: 0.6em;
+  font-size: clamp(1.1rem, 3.2vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: 0.5em;
   color: var(--text-secondary);
   margin-bottom: 0.75rem;
 }
 
 .hero-tagline {
   font-family: var(--font-body);
-  font-size: clamp(0.85rem, 1.5vw, 1rem);
-  color: var(--text-dim);
+  font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+  color: #94a3b8;
   letter-spacing: 0.08em;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO OFFICIAL TOKEN CONTRACT (CA) WITH LOGO
+   ═══════════════════════════════════════════════════ */
+.hero-ca-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 18px;
+  padding: 16px 20px;
+  max-width: 680px;
+  margin: 0 auto 2.5rem auto;
+  backdrop-filter: blur(16px);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(0, 255, 136, 0.08),
+    inset 0 0 15px rgba(255, 255, 255, 0.02);
+  text-align: left;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-ca-card:hover {
+  border-color: rgba(0, 255, 136, 0.5);
+  box-shadow: 
+    0 20px 45px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(0, 255, 136, 0.15);
+  transform: translateY(-2px);
+}
+
+.hero-ca-logo-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.hero-ca-logo {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  border: 2px solid rgba(0, 255, 136, 0.4);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  object-fit: cover;
+}
+
+.hero-ca-logo-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #10b981;
+  color: #06060c;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero-ca-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-ca-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.hero-ca-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #00ff88;
+}
+
+.hero-ca-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  animation: dot-pulse 1.5s infinite alternate;
+}
+
+.hero-ca-symbol {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.hero-ca-address-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.hero-ca-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-ca-copy-btn {
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  border-radius: 6px;
+  color: #00ff88;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.hero-ca-copy-btn:hover {
+  background: #00ff88;
+  color: #06060c;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+}
+
+.hero-ca-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hero-ca-dex-link {
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  text-decoration: none;
+  transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hero-ca-dex-link:hover {
+  color: #38bdf8;
+}
+
+@media (max-width: 640px) {
+  .hero-ca-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+  .hero-ca-header {
+    justify-content: center;
+  }
+  .hero-ca-links {
+    justify-content: center;
+  }
+  .hero-ca-code {
+    font-size: 0.75rem;
+  }
 }
 
 /* Hero Buttons */
