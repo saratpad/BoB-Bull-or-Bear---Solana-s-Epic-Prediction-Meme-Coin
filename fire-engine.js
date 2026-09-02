@@ -1,46 +1,45 @@
 /**
- * BoB — Cinematic AAA Bonfire Flame Tongue Engine
- * Pro-tier physics-based realistic flame tongue simulation for Web3 Hero & Arena titles.
- * Dynamically scales with letter dimensions, provides licking flame tongues, heat turbulence,
- * and floating ember sparks without obscuring letter contours.
+ * BoB — Tier-1 AAA Cyber Aurora & Stardust Sparkle Engine
+ * Ultra-luxury particle & aura simulation for Web3 Hero & Arena titles.
+ * Renders cinematic backlight auroras, ambient quantum dust, and diamond glint sparkles
+ * strictly BEHIND the letters, preserving 100% crisp typography clarity.
  */
 
 (function () {
   'use strict';
 
-  class BonfireSimulator {
+  class CyberAuraSimulator {
     constructor(canvasId, type = 'bull') {
       this.canvas = document.getElementById(canvasId);
       if (!this.canvas) return;
 
       this.ctx = this.canvas.getContext('2d');
-      this.type = type; // 'bull' (green) or 'bear' (red)
-      this.particles = [];
-      this.sparks = [];
-      this.maxParticles = 36;
-      this.maxSparks = 16;
+      this.type = type; // 'bull' (emerald) or 'bear' (crimson)
+      this.dust = [];
+      this.glints = [];
+      this.maxDust = 24;
+      this.maxGlints = 6;
       this.width = 0;
       this.height = 0;
       this.dpr = Math.min(window.devicePixelRatio || 1, 2);
       this.isRunning = false;
       this.animId = null;
+      this.time = 0;
 
-      // Color Palettes (White hot core -> Vibrant Main -> Rich Edge)
+      // Tier-1 Color Schemes
       if (this.type === 'bull') {
         this.colors = {
-          core: 'rgba(215, 255, 235, ',
-          inner: 'rgba(0, 255, 136, ',
-          mid: 'rgba(16, 185, 129, ',
-          outer: 'rgba(4, 120, 87, ',
-          spark: 'rgba(110, 231, 183, '
+          glowCore: 'rgba(0, 255, 136, ',
+          glowOuter: 'rgba(16, 185, 129, ',
+          sparkle: '#a7f3d0',
+          glint: '#ffffff'
         };
       } else {
         this.colors = {
-          core: 'rgba(255, 235, 200, ',
-          inner: 'rgba(255, 80, 20, ',
-          mid: 'rgba(239, 68, 68, ',
-          outer: 'rgba(185, 28, 28, ',
-          spark: 'rgba(253, 224, 71, '
+          glowCore: 'rgba(255, 51, 68, ',
+          glowOuter: 'rgba(220, 38, 38, ',
+          sparkle: '#fecaca',
+          glint: '#ffffff'
         };
       }
 
@@ -51,7 +50,6 @@
       this.resize();
       window.addEventListener('resize', () => this.resize(), { passive: true });
 
-      // Handle visibility to save performance
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           this.stop();
@@ -60,19 +58,13 @@
         }
       });
 
-      // Spawn initial particles
-      for (let i = 0; i < this.maxParticles; i++) {
-        const p = this.createParticle();
-        p.y = this.height - Math.random() * this.height * 0.75;
-        p.life = Math.random() * p.maxLife;
-        this.particles.push(p);
+      // Spawn initial ambient stardust
+      for (let i = 0; i < this.maxDust; i++) {
+        this.dust.push(this.createDust(true));
       }
 
-      for (let i = 0; i < this.maxSparks; i++) {
-        const s = this.createSpark();
-        s.y = this.height - Math.random() * this.height * 0.85;
-        s.life = Math.random() * s.maxLife;
-        this.sparks.push(s);
+      for (let i = 0; i < this.maxGlints; i++) {
+        this.glints.push(this.createGlint());
       }
 
       this.start();
@@ -90,48 +82,34 @@
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     }
 
-    createParticle() {
+    createDust(randomLife = false) {
       const w = this.width || 80;
       const h = this.height || 100;
 
-      // Base emitter hugs the bottom contour of the letter
-      const spread = w * 0.48;
-      const centerX = w * 0.5;
-
-      // Proportional radius based strictly on container width
-      const baseRadius = (w * 0.08) + Math.random() * (w * 0.08);
-
       return {
-        x: centerX + (Math.random() - 0.5) * spread,
-        y: h * 0.92 + (Math.random() - 0.5) * 6,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: -((h * 0.016) + Math.random() * (h * 0.024)), // Responsive buoyancy
-        radius: baseRadius,
-        initialRadius: baseRadius,
-        life: 0,
-        maxLife: 38 + Math.random() * 26,
-        turbFreq: 0.05 + Math.random() * 0.05,
-        turbAmp: 0.7 + Math.random() * 0.8,
+        x: w * 0.15 + Math.random() * (w * 0.7),
+        y: h * 0.2 + Math.random() * (h * 0.75),
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: -(0.25 + Math.random() * 0.55),
+        radius: 0.6 + Math.random() * 1.2,
+        life: randomLife ? Math.random() * 60 : 0,
+        maxLife: 50 + Math.random() * 40,
+        pulseSpeed: 0.05 + Math.random() * 0.05,
         seed: Math.random() * 100
       };
     }
 
-    createSpark() {
+    createGlint() {
       const w = this.width || 80;
       const h = this.height || 100;
-      const spread = w * 0.55;
-      const centerX = w * 0.5;
 
       return {
-        x: centerX + (Math.random() - 0.5) * spread,
-        y: h * 0.85 + Math.random() * 8,
-        vx: (Math.random() - 0.5) * 1.2,
-        vy: -((h * 0.022) + Math.random() * (h * 0.032)),
-        radius: 0.8 + Math.random() * 1.4,
+        x: w * 0.2 + Math.random() * (w * 0.6),
+        y: h * 0.2 + Math.random() * (h * 0.65),
         life: 0,
-        maxLife: 55 + Math.random() * 35,
-        swaySpeed: 0.07 + Math.random() * 0.07,
-        swayAmp: 1.0 + Math.random() * 1.2
+        maxLife: 30 + Math.random() * 30,
+        size: 2.5 + Math.random() * 3.5,
+        delay: Math.floor(Math.random() * 80)
       };
     }
 
@@ -158,143 +136,112 @@
       const ctx = this.ctx;
       if (!ctx || this.width === 0 || this.height === 0) return;
 
+      this.time += 0.03;
       ctx.clearRect(0, 0, this.width, this.height);
 
-      // Additive blending for luminous fluid flame
-      ctx.globalCompositeOperation = 'lighter';
-
       const centerX = this.width * 0.5;
-      const baseY = this.height * 0.92;
+      const centerY = this.height * 0.52;
 
-      // 1. Bed of Coals Subtle Underlight
-      const baseGlow = ctx.createRadialGradient(
-        centerX, baseY, 2,
-        centerX, baseY, this.width * 0.35
+      // 1. Cinematic Backlight Aurora Flare (Soft Ambient Glow Behind the Letter)
+      ctx.globalCompositeOperation = 'screen';
+
+      const breathe = Math.sin(this.time * 1.8) * 0.08;
+      const auraRadius = (this.width * 0.42) * (1 + breathe);
+
+      const auraGrad = ctx.createRadialGradient(
+        centerX, centerY, 5,
+        centerX, centerY, auraRadius
       );
-      baseGlow.addColorStop(0, this.colors.inner + '0.4)');
-      baseGlow.addColorStop(0.6, this.colors.mid + '0.15)');
-      baseGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = baseGlow;
+      auraGrad.addColorStop(0, this.colors.glowCore + (0.28 + breathe) + ')');
+      auraGrad.addColorStop(0.5, this.colors.glowOuter + (0.12 + breathe * 0.5) + ')');
+      auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = auraGrad;
       ctx.beginPath();
-      ctx.ellipse(centerX, baseY, this.width * 0.35, this.height * 0.08, 0, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, auraRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. Render Elongated Flame Tongues
-      for (let i = 0; i < this.particles.length; i++) {
-        const p = this.particles[i];
-        p.life++;
+      // 2. Ambient Quantum Stardust Particles (Floating gently in 3D depth)
+      ctx.globalCompositeOperation = 'lighter';
 
-        if (p.life >= p.maxLife) {
-          this.particles[i] = this.createParticle();
+      for (let i = 0; i < this.dust.length; i++) {
+        const d = this.dust[i];
+        d.life++;
+
+        if (d.life >= d.maxLife) {
+          this.dust[i] = this.createDust(false);
           continue;
         }
 
-        const progress = p.life / p.maxLife; // 0 to 1
+        d.x += d.vx + Math.sin(d.life * d.pulseSpeed + d.seed) * 0.3;
+        d.y += d.vy;
 
-        // Horizontal turbulence motion simulating swirling heat vortex
-        const turbulence = Math.sin(p.life * p.turbFreq + p.seed) * p.turbAmp;
-        p.x += p.vx + turbulence;
-        p.y += p.vy;
+        const progress = d.life / d.maxLife;
+        const alpha = Math.sin(progress * Math.PI) * 0.85;
 
-        // Pyramid convergence towards center top
-        const distFromCenter = p.x - centerX;
-        p.x -= distFromCenter * 0.018;
-
-        // Radius taper to tip
-        let currentRadius = p.initialRadius * (1 + 0.2 * Math.sin(progress * Math.PI)) * (1 - progress * 0.85);
-        if (currentRadius < 0.5) currentRadius = 0.5;
-
-        // Alpha envelope
-        let alpha = 1;
-        if (progress < 0.15) {
-          alpha = progress / 0.15;
-        } else {
-          alpha = Math.max(0, 1 - Math.pow(progress, 1.5));
-        }
-
-        // Soft top boundary falloff
-        const topThreshold = this.height * 0.22;
-        if (p.y < topThreshold) {
-          alpha *= Math.max(0, p.y / topThreshold);
-        }
-
-        const grad = ctx.createRadialGradient(
-          0, 0, 0,
-          0, 0, currentRadius
-        );
-
-        if (progress < 0.25) {
-          // Hot core
-          grad.addColorStop(0, this.colors.core + (alpha * 0.85) + ')');
-          grad.addColorStop(0.45, this.colors.inner + (alpha * 0.75) + ')');
-          grad.addColorStop(0.9, this.colors.mid + (alpha * 0.4) + ')');
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
-        } else if (progress < 0.65) {
-          // Rich flame tongue
-          grad.addColorStop(0, this.colors.inner + (alpha * 0.75) + ')');
-          grad.addColorStop(0.5, this.colors.mid + (alpha * 0.6) + ')');
-          grad.addColorStop(0.9, this.colors.outer + (alpha * 0.3) + ')');
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
-        } else {
-          // Flame tip decay
-          grad.addColorStop(0, this.colors.mid + (alpha * 0.45) + ')');
-          grad.addColorStop(0.7, this.colors.outer + (alpha * 0.2) + ')');
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
-        }
-
-        // Render as vertical elongated flame tongue
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(turbulence * 0.08);
-        ctx.scale(0.68, 1.45); // Elongated licking tongue shape
-        ctx.fillStyle = grad;
+        ctx.fillStyle = this.colors.glowCore + Math.max(0, alpha) + ')';
         ctx.beginPath();
-        ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
       }
 
-      // 3. Render Floating Ember Sparks
-      for (let i = 0; i < this.sparks.length; i++) {
-        const s = this.sparks[i];
-        s.life++;
+      // 3. Diamond Star Glints (Exquisite 4-point sparkle flashes)
+      for (let i = 0; i < this.glints.length; i++) {
+        const g = this.glints[i];
 
-        if (s.life >= s.maxLife) {
-          this.sparks[i] = this.createSpark();
+        if (g.delay > 0) {
+          g.delay--;
           continue;
         }
 
-        const sProgress = s.life / s.maxLife;
-        s.x += s.vx + Math.sin(s.life * s.swaySpeed) * s.swayAmp;
-        s.y += s.vy;
-
-        let sAlpha = Math.sin(sProgress * Math.PI) * (0.7 + 0.3 * Math.sin(s.life * 0.5));
-        const sparkTopThreshold = this.height * 0.15;
-        if (s.y < sparkTopThreshold) {
-          sAlpha *= Math.max(0, s.y / sparkTopThreshold);
+        g.life++;
+        if (g.life >= g.maxLife) {
+          this.glints[i] = this.createGlint();
+          continue;
         }
 
-        ctx.fillStyle = this.colors.spark + Math.max(0, sAlpha * 0.85) + ')';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-        ctx.fill();
+        const gProgress = g.life / g.maxLife;
+        const gAlpha = Math.sin(gProgress * Math.PI);
+        const s = g.size * Math.sin(gProgress * Math.PI);
+
+        if (gAlpha > 0.05) {
+          ctx.save();
+          ctx.translate(g.x, g.y);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${gAlpha * 0.9})`;
+          ctx.lineWidth = 1;
+
+          // 4-point star cross
+          ctx.beginPath();
+          ctx.moveTo(-s * 2, 0);
+          ctx.lineTo(s * 2, 0);
+          ctx.moveTo(0, -s * 2);
+          ctx.lineTo(0, s * 2);
+          ctx.stroke();
+
+          // Center bright point
+          ctx.fillStyle = `rgba(255, 255, 255, ${gAlpha})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, s * 0.4, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
       }
     }
   }
 
-  // Auto-initialize when DOM is loaded or canvas is ready
-  function initBonfires() {
-    new BonfireSimulator('canvas-flame-bull', 'bull');
-    new BonfireSimulator('canvas-flame-bear', 'bear');
-    new BonfireSimulator('canvas-arena-bull', 'bull');
-    new BonfireSimulator('canvas-arena-bear', 'bear');
+  function initSimulators() {
+    new CyberAuraSimulator('canvas-flame-bull', 'bull');
+    new CyberAuraSimulator('canvas-flame-bear', 'bear');
+    new CyberAuraSimulator('canvas-arena-bull', 'bull');
+    new CyberAuraSimulator('canvas-arena-bear', 'bear');
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBonfires);
+    document.addEventListener('DOMContentLoaded', initSimulators);
   } else {
-    initBonfires();
+    initSimulators();
   }
 
-  window.initBoBBonfires = initBonfires;
+  window.initBoBBonfires = initSimulators;
 })();
