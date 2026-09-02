@@ -378,7 +378,7 @@
   }
 
   /* ═══════════════════════════════════════════════
-     4. MOBILE NAVIGATION
+     4. MOBILE NAV
      ═══════════════════════════════════════════════ */
   function initMobileNav() {
     if (!hamburger || !navLinks) return;
@@ -423,8 +423,24 @@
   /* ═══════════════════════════════════════════════
      5. 1-CLICK DIRECT SOLANA WALLET CONNECT
      ═══════════════════════════════════════════════ */
+  function getPhantomProvider() {
+    if (window.phantom && window.phantom.solana && window.phantom.solana.isPhantom) {
+      return window.phantom.solana;
+    }
+    if (window.solana && window.solana.isPhantom) {
+      return window.solana;
+    }
+    return null;
+  }
+
+  function getSolflareProvider() {
+    if (window.solflare && window.solflare.isSolflare) {
+      return window.solflare;
+    }
+    return null;
+  }
+
   function initWallet() {
-    // When clicking Connect: immediately call wallet provider without modal confusion!
     walletConnectBtn.addEventListener('click', handleDirectConnect);
     walletConnectBtnMobile.addEventListener('click', handleDirectConnect);
     stakingConnectBtn.addEventListener('click', handleDirectConnect);
@@ -443,28 +459,62 @@
       return;
     }
 
-    const hasPhantom = window.solana && window.solana.isPhantom;
-    const hasSolflare = window.solflare && window.solflare.isSolflare;
+    const phantom = getPhantomProvider();
+    const solflare = getSolflareProvider();
 
-    // Direct 1-click connect: Priority Phantom -> Solflare
-    if (hasPhantom) {
+    // Direct Connect flow: Priority Phantom
+    if (phantom) {
       try {
-        const resp = await window.solana.connect();
-        handleWalletAuthorized(window.solana, 'phantom', resp.publicKey.toString());
-      } catch (err) {
-        if (err.code !== 4001) { // 4001 = User rejected
-          showToast('Connection failed: ' + (err.message || 'Unknown'), true);
+        showToast('Opening Phantom wallet...');
+        
+        let resp;
+        try {
+          resp = await phantom.connect({ onlyIfTrusted: false });
+        } catch (firstErr) {
+          if (firstErr && firstErr.message && firstErr.message.includes('Unexpected error')) {
+            console.warn('Retrying phantom.connect()...', firstErr);
+            resp = await phantom.connect();
+          } else {
+            throw firstErr;
+          }
         }
-      }
-    } else if (hasSolflare) {
-      try {
-        await window.solflare.connect();
-        handleWalletAuthorized(window.solflare, 'solflare', window.solflare.publicKey.toString());
+
+        const pubkeyStr = (resp && resp.publicKey) ? resp.publicKey.toString() : (phantom.publicKey ? phantom.publicKey.toString() : null);
+        if (pubkeyStr) {
+          handleWalletAuthorized(phantom, 'phantom', pubkeyStr);
+          return;
+        }
       } catch (err) {
-        showToast('Solflare connection failed', true);
+        console.warn('Phantom connect error detail:', err);
+        
+        if (err.code === 4001 || (err.message && err.message.toLowerCase().includes('user rejected'))) {
+          showToast('Connection cancelled by user');
+          return;
+        }
+
+        if (err.message && (err.message.includes('Unexpected error') || err.code === -32603)) {
+          showToast('⚠️ กรุณาปลดล็อก Phantom (Unlock) ที่ไอคอนกระเป๋า แล้วกด Connect อีกครั้ง', true);
+          return;
+        }
+
+        showToast('Wallet notice: ' + (err.message || 'Please check wallet extension'), true);
+        return;
+      }
+    } else if (solflare) {
+      try {
+        showToast('Opening Solflare wallet...');
+        await solflare.connect();
+        if (solflare.publicKey) {
+          handleWalletAuthorized(solflare, 'solflare', solflare.publicKey.toString());
+          return;
+        }
+      } catch (err) {
+        if (err.code !== 4001) {
+          showToast('Solflare: ' + (err.message || 'Please unlock wallet'), true);
+        }
+        return;
       }
     } else {
-      // Neither detected: Show fast install fallback
       openModal('wallet-fallback-modal');
     }
   }
