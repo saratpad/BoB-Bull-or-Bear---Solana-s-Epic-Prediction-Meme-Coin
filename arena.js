@@ -36,12 +36,16 @@
     currentSolPrice: 145.20,
     targetPrice: 148.50,
     roundId: 88,
+    roundStartTime: Date.now() - 35 * 60 * 1000, // Used for USA Round naming
     roundEndsAt: Date.now() + 5.5 * 3600 * 1000,
     roundEnded: false,
     winner: null,
     selectedFaction: 'bull',
     bullPool: 2450000,
     bearPool: 1820000,
+    bobPriceUsd: 0.0001, // Base value: 100,000 $BoB = $10.00 USD
+    voteRerollChosenPct: 0,
+    voteExtendChosenPct: 0,
     userStaked: {
       amount: 0,
       side: null,
@@ -103,15 +107,30 @@
     clashBullBox: document.getElementById('clash-bull-box'),
     clashBearBox: document.getElementById('clash-bear-box'),
 
+    // Round Name & USA Timestamp
+    arenaRoundTag: document.getElementById('arena-round-tag'),
+    roundNumber: document.getElementById('round-number'),
+
     // Dynamic Community Fate Voting
     rerollProgress: document.getElementById('reroll-progress'),
     rerollCurrentPct: document.getElementById('reroll-current-pct'),
     voteRerollBtn: document.getElementById('vote-reroll-btn'),
     rerollUses: document.getElementById('reroll-uses'),
+    rerollMaxWeight: document.getElementById('reroll-max-weight'),
+    rerollSlider: document.getElementById('reroll-slider'),
+    rerollPctInput: document.getElementById('reroll-pct-input'),
+    rerollFeeVal: document.getElementById('reroll-fee-val'),
+
     extendProgress: document.getElementById('extend-progress'),
     extendCurrentPct: document.getElementById('extend-current-pct'),
     voteExtendBtn: document.getElementById('vote-extend-btn'),
     extendInfo: document.getElementById('extend-info'),
+    extendMaxWeight: document.getElementById('extend-max-weight'),
+    extendSlider: document.getElementById('extend-slider'),
+    extendPctInput: document.getElementById('extend-pct-input'),
+    extendFeeVal: document.getElementById('extend-fee-val'),
+    voteChips: document.querySelectorAll('.vote-chip'),
+
     buybackPool: document.getElementById('buyback-pool'),
     voteTotalStakes: document.getElementById('vote-total-stakes'),
     voteUserStake: document.getElementById('vote-user-stake'),
@@ -661,18 +680,48 @@
     renderUI();
   }
 
-  // ── DYNAMIC COMMUNITY VOTING LOGIC (PROPORTIONAL TO TOTAL STAKES) ──
-  function getUserVotingWeight() {
+  // ── DYNAMIC COMMUNITY VOTING LOGIC (1/5 STAKE FEE & USER-SELECTED %) ──
+  function getUsRoundName(timestamp) {
+    const d = new Date(timestamp || state.roundStartTime || (Date.now() - 35 * 60 * 1000));
+    const optionsDate = {
+      timeZone: 'America/New_York',
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric'
+    };
+    const optionsTime = {
+      timeZone: 'America/New_York',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    };
+    const datePart = new Intl.DateTimeFormat('en-US', optionsDate).format(d).toUpperCase();
+    const timePart = new Intl.DateTimeFormat('en-US', optionsTime).format(d);
+    return `${datePart} • ${timePart} EDT`;
+  }
+
+  function getUserMaxVotingWeight() {
     const total = state.bullPool + state.bearPool;
     if (total <= 0 || !state.userStaked || state.userStaked.amount <= 0) return 0;
     // (Your Stake ÷ Total Stakes Across Both Factions) × 100%
     return +((state.userStaked.amount / total) * 100).toFixed(1);
   }
 
-  function getVoteFeeInSol() {
-    const price = state.currentSolPrice > 0 ? state.currentSolPrice : 100;
-    // Exactly 1 USD worth of SOL
-    return +(1.0 / price).toFixed(4);
+  function calculateVoteFee(selectedPct) {
+    const maxWeight = getUserMaxVotingWeight();
+    if (maxWeight <= 0 || selectedPct <= 0 || !state.userStaked || state.userStaked.amount <= 0) {
+      return { feeSol: 0, feeUsd: 0, usedStakeAmount: 0 };
+    }
+    // Fraction of user's stake used for this vote (capped at 100%)
+    const fraction = Math.min(1.0, selectedPct / maxWeight);
+    const usedStakeAmount = state.userStaked.amount * fraction;
+    // Staked value in USD
+    const stakeValueUsd = usedStakeAmount * (state.bobPriceUsd || 0.0001);
+    // Fee is exactly 1 in 5 (20%) of the staked value
+    const feeUsd = +(stakeValueUsd * 0.20).toFixed(2);
+    const solPrice = state.currentSolPrice > 0 ? state.currentSolPrice : 145;
+    const feeSol = +(feeUsd / solPrice).toFixed(4);
+    return { feeSol, feeUsd, usedStakeAmount };
   }
 
   async function handleVoteReroll() {
@@ -691,19 +740,22 @@
       return;
     }
 
-    const userWeight = getUserVotingWeight();
-    const feeSol = getVoteFeeInSol();
+    const maxWeight = getUserMaxVotingWeight();
+    let chosenPct = state.voteRerollChosenPct > 0 ? state.voteRerollChosenPct : maxWeight;
+    if (chosenPct > maxWeight) chosenPct = maxWeight;
+
+    const { feeSol, feeUsd } = calculateVoteFee(chosenPct);
 
     try {
       if (el.voteRerollBtn) el.voteRerollBtn.disabled = true;
 
-      // Deduct fee (1 USD in SOL) and accumulate into 100% Buyback Vault
+      // Deduct fee (1/5 of staked value in SOL) and accumulate into 100% Buyback Vault
       state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
       if (state.solBalance >= feeSol) {
         state.solBalance = +(state.solBalance - feeSol).toFixed(4);
       }
 
-      state.voting.rerollVotes = +(state.voting.rerollVotes + userWeight).toFixed(1);
+      state.voting.rerollVotes = +(state.voting.rerollVotes + chosenPct).toFixed(1);
       state.voting.userVotedReroll = true;
 
       if (state.voting.rerollVotes >= 60) {
@@ -713,9 +765,9 @@
         state.voting.rerollVotes = 0;
         state.voting.rerollUsed += 1;
         state.voting.userVotedReroll = false; // reset for next reroll cycle
-        showToast(`🎯 60% Goal Met! Target rerolled to $${state.targetPrice.toFixed(2)}! (Fee: ${feeSol} SOL burned) 🚀`);
+        showToast(`🎯 60% Goal Met! Target rerolled to $${state.targetPrice.toFixed(2)}! (Burned: ${feeSol} SOL / ~$${feeUsd.toFixed(2)}) 🚀`);
       } else {
-        showToast(`🗳️ Vote recorded! Added +${userWeight}% weight (Fee: ${feeSol} SOL / $1 USD) → Total: ${state.voting.rerollVotes}% / 60%`);
+        showToast(`🗳️ Vote recorded! Cast +${chosenPct}% weight (Fee: ${feeSol} SOL / ~$${feeUsd.toFixed(2)} burned) → Total: ${state.voting.rerollVotes}% / 60%`);
       }
 
       persistData();
@@ -738,19 +790,22 @@
       return;
     }
 
-    const userWeight = getUserVotingWeight();
-    const feeSol = getVoteFeeInSol();
+    const maxWeight = getUserMaxVotingWeight();
+    let chosenPct = state.voteExtendChosenPct > 0 ? state.voteExtendChosenPct : maxWeight;
+    if (chosenPct > maxWeight) chosenPct = maxWeight;
+
+    const { feeSol, feeUsd } = calculateVoteFee(chosenPct);
 
     try {
       if (el.voteExtendBtn) el.voteExtendBtn.disabled = true;
 
-      // Deduct fee (1 USD in SOL) and accumulate into 100% Buyback Vault
+      // Deduct fee (1/5 of staked value in SOL) and accumulate into 100% Buyback Vault
       state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
       if (state.solBalance >= feeSol) {
         state.solBalance = +(state.solBalance - feeSol).toFixed(4);
       }
 
-      state.voting.extendVotes = +(state.voting.extendVotes + userWeight).toFixed(1);
+      state.voting.extendVotes = +(state.voting.extendVotes + chosenPct).toFixed(1);
       state.voting.userVotedExtend = true;
 
       if (state.voting.extendVotes >= 60) {
@@ -759,9 +814,9 @@
         state.voting.extendedHours += 3;
         state.voting.extendVotes = 0;
         state.voting.userVotedExtend = false;
-        showToast(`⏳ 60% Goal Met! Round extended by +3 hours! (Fee: ${feeSol} SOL burned) ⚔️`);
+        showToast(`⏳ 60% Goal Met! Round extended by +3 hours! (Burned: ${feeSol} SOL / ~$${feeUsd.toFixed(2)}) ⚔️`);
       } else {
-        showToast(`🗳️ Vote recorded! Added +${userWeight}% weight (Fee: ${feeSol} SOL / $1 USD) → Total: ${state.voting.extendVotes}% / 60%`);
+        showToast(`🗳️ Vote recorded! Cast +${chosenPct}% weight (Fee: ${feeSol} SOL / ~$${feeUsd.toFixed(2)} burned) → Total: ${state.voting.extendVotes}% / 60%`);
       }
 
       persistData();
@@ -784,6 +839,18 @@
   function renderUI() {
     renderBalances();
     updateJudgmentDisplay();
+
+    // Round Name & USA Timestamp
+    const usRound = getUsRoundName();
+    if (el.arenaRoundTag) {
+      el.arenaRoundTag.textContent = `ROUND: ${usRound} — LIVE`;
+    }
+    if (el.roundNumber) {
+      el.roundNumber.textContent = `Round: ${usRound}`;
+    }
+    if (el.arenaClaimNote) {
+      el.arenaClaimNote.textContent = `Rewards unlock automatically when Round ${usRound} closes`;
+    }
 
     // Connection Visibility
     if (state.connected) {
@@ -829,8 +896,7 @@
     if (el.tugBearPct) el.tugBearPct.textContent = `${bearPct}%`;
 
     // Real-Time User Voting Weight & Stake Overview
-    const userWeight = getUserVotingWeight();
-    const feeSol = getVoteFeeInSol();
+    const maxWeight = getUserMaxVotingWeight();
 
     if (el.voteTotalStakes) {
       el.voteTotalStakes.textContent = `${(totalPool / 1000000).toFixed(2)}M $BoB`;
@@ -839,14 +905,64 @@
       el.voteUserStake.textContent = `${(state.userStaked.amount || 0).toLocaleString()} $BoB`;
     }
     if (el.voteUserPower) {
-      el.voteUserPower.textContent = `${userWeight}%`;
-      el.voteUserPower.style.color = userWeight > 0 ? '#00ff88' : '#94a3b8';
+      el.voteUserPower.textContent = `${maxWeight}%`;
+      el.voteUserPower.style.color = maxWeight > 0 ? '#00ff88' : '#94a3b8';
     }
     if (el.voteFeeDisplay) {
-      el.voteFeeDisplay.textContent = `~$1 USD (${feeSol} SOL)`;
+      el.voteFeeDisplay.textContent = `1/5 of Staked Value (in SOL)`;
     }
 
-    // Dynamic Fate Voting State
+    // Initialize or clamp chosen vote percentages
+    if (state.voteRerollChosenPct === 0 || state.voteRerollChosenPct > maxWeight) {
+      state.voteRerollChosenPct = maxWeight;
+    }
+    if (state.voteExtendChosenPct === 0 || state.voteExtendChosenPct > maxWeight) {
+      state.voteExtendChosenPct = maxWeight;
+    }
+
+    // Update Weight Limit Labels
+    if (el.rerollMaxWeight) el.rerollMaxWeight.textContent = `${maxWeight}%`;
+    if (el.extendMaxWeight) el.extendMaxWeight.textContent = `${maxWeight}%`;
+
+    // Update Sliders & Inputs
+    if (el.rerollSlider) {
+      el.rerollSlider.max = maxWeight;
+      el.rerollSlider.value = state.voteRerollChosenPct;
+      el.rerollSlider.disabled = maxWeight <= 0;
+    }
+    if (el.rerollPctInput) {
+      el.rerollPctInput.max = maxWeight;
+      el.rerollPctInput.value = state.voteRerollChosenPct;
+      el.rerollPctInput.disabled = maxWeight <= 0;
+    }
+
+    if (el.extendSlider) {
+      el.extendSlider.max = maxWeight;
+      el.extendSlider.value = state.voteExtendChosenPct;
+      el.extendSlider.disabled = maxWeight <= 0;
+    }
+    if (el.extendPctInput) {
+      el.extendPctInput.max = maxWeight;
+      el.extendPctInput.value = state.voteExtendChosenPct;
+      el.extendPctInput.disabled = maxWeight <= 0;
+    }
+
+    // Calculate Fees (1 in 5 of Staked Value)
+    const rerollFee = calculateVoteFee(state.voteRerollChosenPct);
+    const extendFee = calculateVoteFee(state.voteExtendChosenPct);
+
+    if (el.rerollFeeVal) {
+      el.rerollFeeVal.textContent = maxWeight > 0 
+        ? `${rerollFee.feeSol} SOL (~$${rerollFee.feeUsd.toFixed(2)})`
+        : `0.0000 SOL (~$0.00)`;
+    }
+    if (el.extendFeeVal) {
+      el.extendFeeVal.textContent = maxWeight > 0
+        ? `${extendFee.feeSol} SOL (~$${extendFee.feeUsd.toFixed(2)})`
+        : `0.0000 SOL (~$0.00)`;
+    }
+
+    // Dynamic Fate Voting Progress Bars
     if (el.rerollProgress) el.rerollProgress.style.width = `${Math.min(100, state.voting.rerollVotes)}%`;
     if (el.rerollCurrentPct) el.rerollCurrentPct.textContent = `${state.voting.rerollVotes}%`;
     if (el.rerollUses) el.rerollUses.textContent = `${state.voting.rerollUsed}/3 Used`;
@@ -859,15 +975,18 @@
       el.buybackPool.textContent = `${state.voting.buybackPoolSol.toFixed(2)} SOL`;
     }
 
-    // Dynamic Button Labels with Fee and Weight Preview
-    const feeLabel = `~$1 USD (${feeSol} SOL)`;
+    // Dynamic Button Labels
     const btnRerollFee = document.querySelector('.btn-vote-fee');
     if (btnRerollFee) {
-      btnRerollFee.textContent = userWeight > 0 ? `+${userWeight}% | ${feeLabel}` : feeLabel;
+      btnRerollFee.textContent = maxWeight > 0 
+        ? `Cast +${state.voteRerollChosenPct}% • ${rerollFee.feeSol} SOL`
+        : `0.0000 SOL`;
     }
     const btnExtendFee = document.querySelector('.btn-vote-fee-ext');
     if (btnExtendFee) {
-      btnExtendFee.textContent = userWeight > 0 ? `+${userWeight}% | ${feeLabel}` : feeLabel;
+      btnExtendFee.textContent = maxWeight > 0 
+        ? `Cast +${state.voteExtendChosenPct}% • ${extendFee.feeSol} SOL`
+        : `0.0000 SOL`;
     }
 
     // User Active Position
@@ -969,6 +1088,58 @@
     // Action Buttons
     if (el.arenaStakeBtn) el.arenaStakeBtn.addEventListener('click', handleStake);
     if (el.arenaClaimBtn) el.arenaClaimBtn.addEventListener('click', handleClaim);
+
+    // Voting Weight Percentage Selectors (Slider & Input)
+    const updateRerollVoteSelection = (val) => {
+      const max = getUserMaxVotingWeight();
+      val = Math.max(0, Math.min(max, parseFloat(val) || 0));
+      state.voteRerollChosenPct = +(val.toFixed(1));
+      renderUI();
+    };
+
+    const updateExtendVoteSelection = (val) => {
+      const max = getUserMaxVotingWeight();
+      val = Math.max(0, Math.min(max, parseFloat(val) || 0));
+      state.voteExtendChosenPct = +(val.toFixed(1));
+      renderUI();
+    };
+
+    if (el.rerollSlider) {
+      el.rerollSlider.addEventListener('input', (e) => updateRerollVoteSelection(e.target.value));
+    }
+    if (el.rerollPctInput) {
+      el.rerollPctInput.addEventListener('input', (e) => updateRerollVoteSelection(e.target.value));
+      el.rerollPctInput.addEventListener('change', (e) => updateRerollVoteSelection(e.target.value));
+    }
+
+    if (el.extendSlider) {
+      el.extendSlider.addEventListener('input', (e) => updateExtendVoteSelection(e.target.value));
+    }
+    if (el.extendPctInput) {
+      el.extendPctInput.addEventListener('input', (e) => updateExtendVoteSelection(e.target.value));
+      el.extendPctInput.addEventListener('change', (e) => updateExtendVoteSelection(e.target.value));
+    }
+
+    // Quick Chips (25%, 50%, 75%, 100%)
+    if (el.voteChips) {
+      el.voteChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          const target = chip.getAttribute('data-target');
+          const pct = parseFloat(chip.getAttribute('data-pct')) || 100;
+          const max = getUserMaxVotingWeight();
+          const chosen = +(max * (pct / 100)).toFixed(1);
+
+          chip.parentElement.querySelectorAll('.vote-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+
+          if (target === 'reroll') {
+            updateRerollVoteSelection(chosen);
+          } else if (target === 'extend') {
+            updateExtendVoteSelection(chosen);
+          }
+        });
+      });
+    }
 
     // Voting Buttons
     if (el.voteRerollBtn) el.voteRerollBtn.addEventListener('click', handleVoteReroll);

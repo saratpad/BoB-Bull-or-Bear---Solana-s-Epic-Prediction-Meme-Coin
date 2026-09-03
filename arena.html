@@ -33,7 +33,7 @@
       </a>
       <div class="arena-nav-center">
         <span class="arena-live-dot"></span>
-        <span class="arena-round-tag" id="arena-round-tag">ROUND #88 — LIVE</span>
+        <span class="arena-round-tag" id="arena-round-tag">ROUND: USA TIME — LIVE</span>
       </div>
       <div class="arena-nav-right">
         <button id="arena-wallet-btn" class="btn btn-wallet">
@@ -190,7 +190,7 @@
         <div class="arena-round-header">
           <div class="arena-round-label">
             <span class="arena-status-badge arena-status-live" id="round-status-badge">🔴 LIVE BATTLE</span>
-            <span class="arena-round-number" id="round-number">Round #88</span>
+            <span class="arena-round-number" id="round-number">Round: USA Time</span>
           </div>
           <div class="arena-round-timer-wrap">
             <span class="arena-timer-label">Round Closes In</span>
@@ -308,12 +308,12 @@
             <span class="vote-panel-icon">⚖️</span>
             <div>
               <h3 class="vote-panel-title">Arena Fate & Dynamic Voting</h3>
-              <p class="vote-panel-desc">Voting power is calculated proportionally: (Your Stake ÷ Total Stakes) × 100%. Reaching 60% executes instantly.</p>
+              <p class="vote-panel-desc">Vote to alter fate. Choose your vote % (up to your staked weight). Fee is 1/5 of staked value in SOL (100% burned into Buyback Vault).</p>
             </div>
           </div>
           <div class="vote-buyback-pill">
             <span class="buyback-fire">🔥</span>
-            <span>Buyback Vault: <strong id="buyback-pool">12.45 SOL</strong> (100% burned from $1 USD fees)</span>
+            <span>Buyback Vault: <strong id="buyback-pool">12.45 SOL</strong> (100% burned from voting fees)</span>
           </div>
         </div>
 
@@ -324,16 +324,16 @@
             <strong class="v-val" id="vote-total-stakes">4.27M $BoB</strong>
           </div>
           <div class="vote-power-item">
-            <span class="v-label">Your Stake:</span>
+            <span class="v-label">Your Total Stake:</span>
             <strong class="v-val" id="vote-user-stake">0 $BoB</strong>
           </div>
           <div class="vote-power-item v-power-highlight">
-            <span class="v-label">Your Voting Weight:</span>
+            <span class="v-label">Your Max Vote Weight:</span>
             <strong class="v-val" id="vote-user-power">0.0%</strong>
           </div>
           <div class="vote-power-item">
-            <span class="v-label">Fee per Vote:</span>
-            <strong class="v-val" id="vote-fee-display">~$1 USD (0.0098 SOL)</strong>
+            <span class="v-label">Voting Fee Rule:</span>
+            <strong class="v-val" id="vote-fee-display">1/5 of Staked Value (in SOL)</strong>
           </div>
         </div>
 
@@ -359,9 +359,34 @@
               </div>
             </div>
 
+            <!-- Vote Weight Selector (User can choose <= their staked %) -->
+            <div class="vote-weight-selector-wrap">
+              <div class="vote-selector-header">
+                <span class="v-select-title">Choose Vote % to Cast:</span>
+                <span class="v-select-limit">Max Available: <strong id="reroll-max-weight">0.0%</strong></span>
+              </div>
+              <div class="vote-slider-control-row">
+                <input type="range" class="arena-vote-slider" id="reroll-slider" min="0" max="100" step="0.1" value="0" />
+                <div class="vote-input-num-wrap">
+                  <input type="number" class="arena-vote-num-input" id="reroll-pct-input" min="0" max="100" step="0.1" value="0" />
+                  <span class="vote-input-unit">%</span>
+                </div>
+              </div>
+              <div class="vote-quick-chips">
+                <button type="button" class="vote-chip" data-target="reroll" data-pct="25">25%</button>
+                <button type="button" class="vote-chip" data-target="reroll" data-pct="50">50%</button>
+                <button type="button" class="vote-chip" data-target="reroll" data-pct="75">75%</button>
+                <button type="button" class="vote-chip active" data-target="reroll" data-pct="100">MAX</button>
+              </div>
+              <div class="vote-fee-calc-line">
+                <span>Fee (1/5 of Stake Value):</span>
+                <strong class="fee-sol-highlight" id="reroll-fee-val">0.0000 SOL (~$0.00)</strong>
+              </div>
+            </div>
+
             <div class="arena-vote-action-row">
               <button class="action-btn action-btn-secondary arena-vote-btn" id="vote-reroll-btn">
-                <span>🗳️</span> Vote Reroll Target (<span class="btn-vote-fee">~$1 USD SOL</span>)
+                <span>🗳️</span> Vote Reroll Target (<span class="btn-vote-fee">0.0000 SOL</span>)
               </button>
               <span class="arena-vote-uses" id="reroll-uses">0/3 Used</span>
             </div>
@@ -388,9 +413,34 @@
               </div>
             </div>
 
+            <!-- Vote Weight Selector (User can choose <= their staked %) -->
+            <div class="vote-weight-selector-wrap">
+              <div class="vote-selector-header">
+                <span class="v-select-title">Choose Vote % to Cast:</span>
+                <span class="v-select-limit">Max Available: <strong id="extend-max-weight">0.0%</strong></span>
+              </div>
+              <div class="vote-slider-control-row">
+                <input type="range" class="arena-vote-slider" id="extend-slider" min="0" max="100" step="0.1" value="0" />
+                <div class="vote-input-num-wrap">
+                  <input type="number" class="arena-vote-num-input" id="extend-pct-input" min="0" max="100" step="0.1" value="0" />
+                  <span class="vote-input-unit">%</span>
+                </div>
+              </div>
+              <div class="vote-quick-chips">
+                <button type="button" class="vote-chip" data-target="extend" data-pct="25">25%</button>
+                <button type="button" class="vote-chip" data-target="extend" data-pct="50">50%</button>
+                <button type="button" class="vote-chip" data-target="extend" data-pct="75">75%</button>
+                <button type="button" class="vote-chip active" data-target="extend" data-pct="100">MAX</button>
+              </div>
+              <div class="vote-fee-calc-line">
+                <span>Fee (1/5 of Stake Value):</span>
+                <strong class="fee-sol-highlight" id="extend-fee-val">0.0000 SOL (~$0.00)</strong>
+              </div>
+            </div>
+
             <div class="arena-vote-action-row">
               <button class="action-btn action-btn-secondary arena-vote-btn" id="vote-extend-btn">
-                <span>🗳️</span> Vote Extend Round (<span class="btn-vote-fee-ext">~$1 USD SOL</span>)
+                <span>🗳️</span> Vote Extend Round (<span class="btn-vote-fee-ext">0.0000 SOL</span>)
               </button>
               <span class="arena-vote-uses" id="extend-info">Base: 6h | +0h</span>
             </div>
