@@ -78,6 +78,9 @@
     roundStatusBadge: document.getElementById('round-status-badge'),
     roundNumber: document.getElementById('round-number'),
     roundTimer: document.getElementById('round-timer'),
+    solTargetPrice: document.getElementById('sol-target-price'),
+    solLeadBadge: document.getElementById('sol-lead-badge'),
+    solLeadDelta: document.getElementById('sol-lead-delta'),
     solCurrentPrice: document.getElementById('sol-current-price'),
     solPriceChange: document.getElementById('sol-price-change'),
     solPriceUpdated: document.getElementById('sol-price-updated'),
@@ -97,6 +100,17 @@
     btnSelectBear: document.getElementById('btn-select-bear'),
     clashBullBox: document.getElementById('clash-bull-box'),
     clashBearBox: document.getElementById('clash-bear-box'),
+
+    // Dynamic Community Fate Voting
+    rerollProgress: document.getElementById('reroll-progress'),
+    rerollCurrentPct: document.getElementById('reroll-current-pct'),
+    voteRerollBtn: document.getElementById('vote-reroll-btn'),
+    rerollUses: document.getElementById('reroll-uses'),
+    extendProgress: document.getElementById('extend-progress'),
+    extendCurrentPct: document.getElementById('extend-current-pct'),
+    voteExtendBtn: document.getElementById('vote-extend-btn'),
+    extendInfo: document.getElementById('extend-info'),
+    buybackPool: document.getElementById('buyback-pool'),
 
     // Staking Controls
     arenaBobBalance: document.getElementById('arena-bob-balance'),
@@ -145,6 +159,7 @@
         state.roundEndsAt = pr.roundEndsAt || state.roundEndsAt;
         state.bullPool = pr.bullPool || state.bullPool;
         state.bearPool = pr.bearPool || state.bearPool;
+        state.targetPrice = pr.targetPrice || state.targetPrice;
         state.voting = pr.voting || state.voting;
       }
 
@@ -164,6 +179,7 @@
         roundEndsAt: state.roundEndsAt,
         bullPool: state.bullPool,
         bearPool: state.bearPool,
+        targetPrice: state.targetPrice,
         voting: state.voting
       }));
     } catch (e) {
@@ -240,6 +256,32 @@
     if (el.solPriceUpdated) {
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       el.solPriceUpdated.textContent = `● ${sourceName} • Synced ${timeStr}`;
+    }
+
+    updateJudgmentDisplay();
+  }
+
+  function updateJudgmentDisplay() {
+    if (el.solTargetPrice) {
+      el.solTargetPrice.textContent = `$${state.targetPrice.toFixed(2)}`;
+    }
+
+    const diff = state.currentSolPrice - state.targetPrice;
+    const isBullLead = diff >= 0;
+
+    if (el.solLeadBadge) {
+      el.solLeadBadge.className = `sol-lead-badge ${isBullLead ? 'sol-lead-bull' : 'sol-lead-bear'}`;
+      el.solLeadBadge.textContent = isBullLead ? 'BULL LEADS 🐂' : 'BEAR LEADS 🐻';
+    }
+
+    if (el.solLeadDelta) {
+      if (isBullLead) {
+        el.solLeadDelta.textContent = `+$${diff.toFixed(2)} above target`;
+        el.solLeadDelta.style.color = '#00ff88';
+      } else {
+        el.solLeadDelta.textContent = `-$${Math.abs(diff).toFixed(2)} to target`;
+        el.solLeadDelta.style.color = '#ff4444';
+      }
     }
   }
 
@@ -437,9 +479,9 @@
 
   function endCurrentRound() {
     state.roundEnded = true;
-    state.winner = state.bullPool >= state.bearPool ? 'bull' : 'bear';
+    state.winner = state.currentSolPrice >= state.targetPrice ? 'bull' : 'bear';
     renderUI();
-    showToast(`Round Ended! Winner: ${state.winner.toUpperCase()} Faction 🏆`);
+    showToast(`Round Closed! Winner: ${state.winner.toUpperCase()} Faction (Final: $${state.currentSolPrice.toFixed(2)} vs Target: $${state.targetPrice.toFixed(2)}) 🏆`);
   }
 
   // ── FACTION SELECTION ──
@@ -606,6 +648,68 @@
     renderUI();
   }
 
+  // ── DYNAMIC COMMUNITY VOTING LOGIC ──
+  async function handleVoteReroll() {
+    if (state.voting.rerollUsed >= 3) {
+      showToast('Maximum 3 target rerolls already used this round!');
+      return;
+    }
+
+    try {
+      if (el.voteRerollBtn) el.voteRerollBtn.disabled = true;
+
+      // Weight per vote
+      const weight = 15;
+      state.voting.rerollVotes += weight;
+      state.voting.buybackPoolSol += 0.007;
+
+      if (state.voting.rerollVotes >= 60) {
+        // 60% Threshold Met: Reroll new target ±5-12% around current live price
+        const deltaPct = (Math.random() * 0.16 - 0.08); // ±8% spread
+        state.targetPrice = +(state.currentSolPrice * (1 + deltaPct)).toFixed(2);
+        state.voting.rerollVotes = 0;
+        state.voting.rerollUsed += 1;
+        showToast(`🎯 60% Goal Met! New Target Rerolled to $${state.targetPrice.toFixed(2)}! 🚀`);
+      } else {
+        showToast(`🗳️ Vote recorded! Weight: ${state.voting.rerollVotes}% / 60%`);
+      }
+
+      persistData();
+      renderUI();
+    } catch (e) {
+      showToast('Voting error: ' + e.message);
+    } finally {
+      if (el.voteRerollBtn) el.voteRerollBtn.disabled = false;
+    }
+  }
+
+  async function handleVoteExtend() {
+    try {
+      if (el.voteExtendBtn) el.voteExtendBtn.disabled = true;
+
+      const weight = 15;
+      state.voting.extendVotes += weight;
+      state.voting.buybackPoolSol += 0.007;
+
+      if (state.voting.extendVotes >= 60) {
+        // 60% Threshold Met: Add +3 hours to round countdown
+        state.roundEndsAt += 3 * 3600 * 1000;
+        state.voting.extendedHours += 3;
+        state.voting.extendVotes = 0;
+        showToast(`⏳ 60% Goal Met! Round Extended by +3 Hours! ⚔️`);
+      } else {
+        showToast(`🗳️ Vote recorded! Weight: ${state.voting.extendVotes}% / 60%`);
+      }
+
+      persistData();
+      renderUI();
+    } catch (e) {
+      showToast('Voting error: ' + e.message);
+    } finally {
+      if (el.voteExtendBtn) el.voteExtendBtn.disabled = false;
+    }
+  }
+
   // ── RENDER ENGINE ──
   function renderBalances() {
     const fmt = (n) => n.toLocaleString();
@@ -616,6 +720,7 @@
 
   function renderUI() {
     renderBalances();
+    updateJudgmentDisplay();
 
     // Connection Visibility
     if (state.connected) {
@@ -659,6 +764,19 @@
     if (el.bearPoolBar) el.bearPoolBar.style.width = `${bearPct}%`;
     if (el.tugBullPct) el.tugBullPct.textContent = `${bullPct}%`;
     if (el.tugBearPct) el.tugBearPct.textContent = `${bearPct}%`;
+
+    // Dynamic Fate Voting State
+    if (el.rerollProgress) el.rerollProgress.style.width = `${Math.min(100, state.voting.rerollVotes)}%`;
+    if (el.rerollCurrentPct) el.rerollCurrentPct.textContent = `${state.voting.rerollVotes}%`;
+    if (el.rerollUses) el.rerollUses.textContent = `${state.voting.rerollUsed}/3 Used`;
+
+    if (el.extendProgress) el.extendProgress.style.width = `${Math.min(100, state.voting.extendVotes)}%`;
+    if (el.extendCurrentPct) el.extendCurrentPct.textContent = `${state.voting.extendVotes}%`;
+    if (el.extendInfo) el.extendInfo.textContent = `Base: 6h | +${state.voting.extendedHours}h`;
+
+    if (el.buybackPool) {
+      el.buybackPool.textContent = `${state.voting.buybackPoolSol.toFixed(2)} SOL`;
+    }
 
     // User Active Position
     if (state.userStaked.amount > 0) {
@@ -759,6 +877,10 @@
     // Action Buttons
     if (el.arenaStakeBtn) el.arenaStakeBtn.addEventListener('click', handleStake);
     if (el.arenaClaimBtn) el.arenaClaimBtn.addEventListener('click', handleClaim);
+
+    // Voting Buttons
+    if (el.voteRerollBtn) el.voteRerollBtn.addEventListener('click', handleVoteReroll);
+    if (el.voteExtendBtn) el.voteExtendBtn.addEventListener('click', handleVoteExtend);
 
     // CA Copy Buttons in Arena
     const copyArenaCA = () => {

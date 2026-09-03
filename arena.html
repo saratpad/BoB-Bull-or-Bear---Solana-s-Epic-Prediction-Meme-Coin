@@ -218,18 +218,38 @@
             </button>
           </div>
 
-          <!-- ⚡ CENTER: LIVE REAL-TIME SOL TANK & TUG-OF-WAR ⚡ -->
+          <!-- ⚡ CENTER: LIVE REAL-TIME SOL TANK & TARGET JUDGE ⚡ -->
           <div class="arena-center-hub">
             <div class="sol-live-feed-card">
-              <div class="sol-live-header">
-                <span class="sol-live-indicator"></span>
-                <span class="sol-live-label">LIVE SOLANA PRICE</span>
-                <span class="sol-network-tag">MAINNET</span>
+              <!-- Dual Price Matrix: Target vs Current Live SOL -->
+              <div class="sol-duel-price-grid">
+                <!-- Target Settlement Price -->
+                <div class="sol-price-box sol-box-target">
+                  <div class="sol-price-mini-label">🎯 SETTLEMENT TARGET</div>
+                  <div class="sol-target-val" id="sol-target-price">$102.50</div>
+                  <div class="sol-target-sub">Settle Line</div>
+                </div>
+
+                <!-- Center Judgment Indicator -->
+                <div class="sol-price-judge-center">
+                  <div class="sol-live-indicator-wrap">
+                    <span class="sol-live-indicator"></span>
+                    <span class="sol-live-tag">LIVE FEED</span>
+                  </div>
+                  <div class="sol-lead-badge sol-lead-bear" id="sol-lead-badge">
+                    BEAR LEADS 🐻
+                  </div>
+                  <div class="sol-lead-delta" id="sol-lead-delta">-$1.76 to Target</div>
+                </div>
+
+                <!-- Live Current SOL Price -->
+                <div class="sol-price-box sol-box-current">
+                  <div class="sol-price-mini-label">⚡ CURRENT SOLANA</div>
+                  <div class="sol-live-price" id="sol-current-price">$—</div>
+                  <div class="sol-live-change" id="sol-price-change">+0.00%</div>
+                </div>
               </div>
-              <div class="sol-live-price-wrap">
-                <span class="sol-live-price" id="sol-current-price">$—</span>
-                <span class="sol-live-change" id="sol-price-change">+0.00%</span>
-              </div>
+
               <div class="sol-live-footer">
                 <span id="sol-price-updated">Connecting live feed...</span>
               </div>
@@ -238,7 +258,7 @@
             <!-- VS Clash Badge -->
             <div class="clash-vs-divider">
               <span class="clash-vs-line"></span>
-              <span class="clash-vs-bolt">⚡ VS ⚡</span>
+              <span class="clash-vs-bolt">⚡ POOL DOMINANCE BATTLE ⚡</span>
               <span class="clash-vs-line"></span>
             </div>
 
@@ -253,7 +273,7 @@
                 <div class="clash-tug-spark"></div>
                 <div class="clash-tug-bar clash-tug-bear" id="bear-pool-bar" style="width: 43%;"></div>
               </div>
-              <div class="clash-tug-sub">Real-time stake dominance ratio • Winner takes losing pool</div>
+              <div class="clash-tug-sub">SOL ≥ Target = Bulls Win 🏆 • SOL &lt; Target = Bears Win 🏆</div>
             </div>
           </div>
 
@@ -274,6 +294,83 @@
             </button>
           </div>
 
+        </div>
+      </section>
+
+      <!-- ═══ ARENA FATE & DYNAMIC COMMUNITY VOTING ═══ -->
+      <section class="arena-voting-panel">
+        <div class="arena-vote-panel-header">
+          <div class="vote-title-group">
+            <span class="vote-panel-icon">⚖️</span>
+            <div>
+              <h3 class="vote-panel-title">Arena Fate & Dynamic Voting</h3>
+              <p class="vote-panel-desc">Community can shift the tides of battle. Reach 60% votes to trigger instant on-chain execution.</p>
+            </div>
+          </div>
+          <div class="vote-buyback-pill">
+            <span class="buyback-fire">🔥</span>
+            <span>Buyback Vault: <strong id="buyback-pool">12.45 SOL</strong> (100% burned)</span>
+          </div>
+        </div>
+
+        <div class="arena-vote-cards-grid">
+          <!-- Card 1: Reroll Target Price -->
+          <div class="arena-vote-card">
+            <div class="vote-card-head">
+              <div class="vote-card-icon-wrap vote-icon-gold">🎯</div>
+              <div class="vote-card-meta">
+                <h4 class="vote-card-title">Reroll Target Price</h4>
+                <span class="vote-card-desc">Randomize a new SOL target settlement line (±15-20%)</span>
+              </div>
+            </div>
+            
+            <div class="arena-vote-progress-wrap">
+              <div class="arena-vote-progress-track">
+                <div class="arena-vote-progress-fill arena-vote-fill-green" id="reroll-progress" style="width: 45%;"></div>
+                <div class="arena-vote-threshold" title="60% Threshold to execute"></div>
+              </div>
+              <div class="arena-vote-progress-labels">
+                <span>Vote Weight: <strong id="reroll-current-pct">45%</strong></span>
+                <span class="arena-vote-threshold-label">Goal: 60%</span>
+              </div>
+            </div>
+
+            <div class="arena-vote-action-row">
+              <button class="action-btn action-btn-secondary arena-vote-btn" id="vote-reroll-btn">
+                <span>🗳️</span> Vote Reroll Target (~$1 SOL)
+              </button>
+              <span class="arena-vote-uses" id="reroll-uses">0/3 Used</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Extend Round Time -->
+          <div class="arena-vote-card">
+            <div class="vote-card-head">
+              <div class="vote-card-icon-wrap vote-icon-blue">⏳</div>
+              <div class="vote-card-meta">
+                <h4 class="vote-card-title">Extend Round Time</h4>
+                <span class="vote-card-desc">Add +3 hours to round countdown for extra comeback window</span>
+              </div>
+            </div>
+
+            <div class="arena-vote-progress-wrap">
+              <div class="arena-vote-progress-track">
+                <div class="arena-vote-progress-fill arena-vote-fill-blue" id="extend-progress" style="width: 30%;"></div>
+                <div class="arena-vote-threshold" title="60% Threshold to execute"></div>
+              </div>
+              <div class="arena-vote-progress-labels">
+                <span>Vote Weight: <strong id="extend-current-pct">30%</strong></span>
+                <span class="arena-vote-threshold-label">Goal: 60%</span>
+              </div>
+            </div>
+
+            <div class="arena-vote-action-row">
+              <button class="action-btn action-btn-secondary arena-vote-btn" id="vote-extend-btn">
+                <span>🗳️</span> Vote Extend Round (~$1 SOL)
+              </button>
+              <span class="arena-vote-uses" id="extend-info">Base: 6h | +0h</span>
+            </div>
+          </div>
         </div>
       </section>
 
