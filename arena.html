@@ -308,12 +308,32 @@
             <span class="vote-panel-icon">⚖️</span>
             <div>
               <h3 class="vote-panel-title">Arena Fate & Dynamic Voting</h3>
-              <p class="vote-panel-desc">Community can shift the tides of battle. Reach 60% votes to trigger instant on-chain execution.</p>
+              <p class="vote-panel-desc">Voting power is calculated proportionally: (Your Stake ÷ Total Stakes) × 100%. Reaching 60% executes instantly.</p>
             </div>
           </div>
           <div class="vote-buyback-pill">
             <span class="buyback-fire">🔥</span>
-            <span>Buyback Vault: <strong id="buyback-pool">12.45 SOL</strong> (100% burned)</span>
+            <span>Buyback Vault: <strong id="buyback-pool">12.45 SOL</strong> (100% burned from $1 USD fees)</span>
+          </div>
+        </div>
+
+        <!-- Real-Time User Voting Weight & Stake Overview -->
+        <div class="vote-power-overview-box">
+          <div class="vote-power-item">
+            <span class="v-label">Total Arena Stakes:</span>
+            <strong class="v-val" id="vote-total-stakes">4.27M $BoB</strong>
+          </div>
+          <div class="vote-power-item">
+            <span class="v-label">Your Stake:</span>
+            <strong class="v-val" id="vote-user-stake">0 $BoB</strong>
+          </div>
+          <div class="vote-power-item v-power-highlight">
+            <span class="v-label">Your Voting Weight:</span>
+            <strong class="v-val" id="vote-user-power">0.0%</strong>
+          </div>
+          <div class="vote-power-item">
+            <span class="v-label">Fee per Vote:</span>
+            <strong class="v-val" id="vote-fee-display">~$1 USD (0.0098 SOL)</strong>
           </div>
         </div>
 
@@ -324,7 +344,7 @@
               <div class="vote-card-icon-wrap vote-icon-gold">🎯</div>
               <div class="vote-card-meta">
                 <h4 class="vote-card-title">Reroll Target Price</h4>
-                <span class="vote-card-desc">Randomize a new SOL target settlement line (±15-20%)</span>
+                <span class="vote-card-desc">Randomize a new SOL target settlement line (±8-15%)</span>
               </div>
             </div>
             
@@ -335,13 +355,13 @@
               </div>
               <div class="arena-vote-progress-labels">
                 <span>Vote Weight: <strong id="reroll-current-pct">45%</strong></span>
-                <span class="arena-vote-threshold-label">Goal: 60%</span>
+                <span class="arena-vote-threshold-label">Goal: 60% of Stakes</span>
               </div>
             </div>
 
             <div class="arena-vote-action-row">
               <button class="action-btn action-btn-secondary arena-vote-btn" id="vote-reroll-btn">
-                <span>🗳️</span> Vote Reroll Target (~$1 SOL)
+                <span>🗳️</span> Vote Reroll Target (<span class="btn-vote-fee">~$1 USD SOL</span>)
               </button>
               <span class="arena-vote-uses" id="reroll-uses">0/3 Used</span>
             </div>
@@ -364,13 +384,13 @@
               </div>
               <div class="arena-vote-progress-labels">
                 <span>Vote Weight: <strong id="extend-current-pct">30%</strong></span>
-                <span class="arena-vote-threshold-label">Goal: 60%</span>
+                <span class="arena-vote-threshold-label">Goal: 60% of Stakes</span>
               </div>
             </div>
 
             <div class="arena-vote-action-row">
               <button class="action-btn action-btn-secondary arena-vote-btn" id="vote-extend-btn">
-                <span>🗳️</span> Vote Extend Round (~$1 SOL)
+                <span>🗳️</span> Vote Extend Round (<span class="btn-vote-fee-ext">~$1 USD SOL</span>)
               </button>
               <span class="arena-vote-uses" id="extend-info">Base: 6h | +0h</span>
             </div>

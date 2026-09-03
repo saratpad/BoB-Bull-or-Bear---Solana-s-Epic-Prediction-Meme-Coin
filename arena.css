@@ -1482,6 +1482,49 @@
   color: #ffedd5;
 }
 
+/* Real-Time User Voting Weight & Stake Overview */
+.vote-power-overview-box {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .vote-power-overview-box {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.vote-power-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vote-power-item .v-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vote-power-item .v-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.vote-power-item.v-power-highlight .v-val {
+  color: #00ff88;
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+}
+
 .arena-vote-cards-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

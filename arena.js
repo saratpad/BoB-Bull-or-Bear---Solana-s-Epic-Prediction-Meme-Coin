@@ -48,11 +48,13 @@
       claimed: false
     },
     voting: {
-      rerollVotes: 45, // %
+      rerollVotes: 35, // %
       rerollUsed: 0,
-      extendVotes: 30, // %
+      extendVotes: 20, // %
       extendedHours: 0,
-      buybackPoolSol: 12.45
+      buybackPoolSol: 12.45,
+      userVotedReroll: false,
+      userVotedExtend: false
     }
   };
 
@@ -111,6 +113,10 @@
     voteExtendBtn: document.getElementById('vote-extend-btn'),
     extendInfo: document.getElementById('extend-info'),
     buybackPool: document.getElementById('buyback-pool'),
+    voteTotalStakes: document.getElementById('vote-total-stakes'),
+    voteUserStake: document.getElementById('vote-user-stake'),
+    voteUserPower: document.getElementById('vote-user-power'),
+    voteFeeDisplay: document.getElementById('vote-fee-display'),
 
     // Staking Controls
     arenaBobBalance: document.getElementById('arena-bob-balance'),
@@ -156,7 +162,14 @@
       const savedRound = localStorage.getItem(STORAGE_KEYS.ROUND_STATE);
       if (savedRound) {
         const pr = JSON.parse(savedRound);
-        state.roundEndsAt = pr.roundEndsAt || state.roundEndsAt;
+        if (pr.roundEndsAt && pr.roundEndsAt > Date.now()) {
+          state.roundEndsAt = pr.roundEndsAt;
+          state.roundEnded = !!pr.roundEnded;
+        } else {
+          // Fresh round active
+          state.roundEndsAt = Date.now() + 5.5 * 3600 * 1000;
+          state.roundEnded = false;
+        }
         state.bullPool = pr.bullPool || state.bullPool;
         state.bearPool = pr.bearPool || state.bearPool;
         state.targetPrice = pr.targetPrice || state.targetPrice;
@@ -648,30 +661,61 @@
     renderUI();
   }
 
-  // ── DYNAMIC COMMUNITY VOTING LOGIC ──
+  // ── DYNAMIC COMMUNITY VOTING LOGIC (PROPORTIONAL TO TOTAL STAKES) ──
+  function getUserVotingWeight() {
+    const total = state.bullPool + state.bearPool;
+    if (total <= 0 || !state.userStaked || state.userStaked.amount <= 0) return 0;
+    // (Your Stake ÷ Total Stakes Across Both Factions) × 100%
+    return +((state.userStaked.amount / total) * 100).toFixed(1);
+  }
+
+  function getVoteFeeInSol() {
+    const price = state.currentSolPrice > 0 ? state.currentSolPrice : 100;
+    // Exactly 1 USD worth of SOL
+    return +(1.0 / price).toFixed(4);
+  }
+
   async function handleVoteReroll() {
+    if (!state.userStaked || state.userStaked.amount <= 0) {
+      showToast('⚠️ You need to stake $BoB in the arena first to gain voting weight! (Current: 0%)');
+      return;
+    }
+
+    if (state.voting.userVotedReroll) {
+      showToast('ℹ️ You have already cast your stake weight to Reroll in this round!');
+      return;
+    }
+
     if (state.voting.rerollUsed >= 3) {
       showToast('Maximum 3 target rerolls already used this round!');
       return;
     }
 
+    const userWeight = getUserVotingWeight();
+    const feeSol = getVoteFeeInSol();
+
     try {
       if (el.voteRerollBtn) el.voteRerollBtn.disabled = true;
 
-      // Weight per vote
-      const weight = 15;
-      state.voting.rerollVotes += weight;
-      state.voting.buybackPoolSol += 0.007;
+      // Deduct fee (1 USD in SOL) and accumulate into 100% Buyback Vault
+      state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
+      if (state.solBalance >= feeSol) {
+        state.solBalance = +(state.solBalance - feeSol).toFixed(4);
+      }
+
+      state.voting.rerollVotes = +(state.voting.rerollVotes + userWeight).toFixed(1);
+      state.voting.userVotedReroll = true;
 
       if (state.voting.rerollVotes >= 60) {
-        // 60% Threshold Met: Reroll new target ±5-12% around current live price
-        const deltaPct = (Math.random() * 0.16 - 0.08); // ±8% spread
+        // 60% Threshold Met: Reroll new target ±8-15% around current live price
+        const deltaPct = (Math.random() * 0.16 - 0.08);
         state.targetPrice = +(state.currentSolPrice * (1 + deltaPct)).toFixed(2);
         state.voting.rerollVotes = 0;
         state.voting.rerollUsed += 1;
-        showToast(`🎯 60% Goal Met! New Target Rerolled to $${state.targetPrice.toFixed(2)}! 🚀`);
+        state.voting.userVotedReroll = false; // reset for next reroll cycle
+        showToast(`🎯 60% Goal Met! Target rerolled to $${state.targetPrice.toFixed(2)}! (Fee: ${feeSol} SOL burned) 🚀`);
       } else {
-        showToast(`🗳️ Vote recorded! Weight: ${state.voting.rerollVotes}% / 60%`);
+        showToast(`🗳️ Vote recorded! Added +${userWeight}% weight (Fee: ${feeSol} SOL / $1 USD) → Total: ${state.voting.rerollVotes}% / 60%`);
       }
 
       persistData();
@@ -684,21 +728,40 @@
   }
 
   async function handleVoteExtend() {
+    if (!state.userStaked || state.userStaked.amount <= 0) {
+      showToast('⚠️ You need to stake $BoB in the arena first to gain voting weight! (Current: 0%)');
+      return;
+    }
+
+    if (state.voting.userVotedExtend) {
+      showToast('ℹ️ You have already cast your stake weight to Extend Time in this round!');
+      return;
+    }
+
+    const userWeight = getUserVotingWeight();
+    const feeSol = getVoteFeeInSol();
+
     try {
       if (el.voteExtendBtn) el.voteExtendBtn.disabled = true;
 
-      const weight = 15;
-      state.voting.extendVotes += weight;
-      state.voting.buybackPoolSol += 0.007;
+      // Deduct fee (1 USD in SOL) and accumulate into 100% Buyback Vault
+      state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
+      if (state.solBalance >= feeSol) {
+        state.solBalance = +(state.solBalance - feeSol).toFixed(4);
+      }
+
+      state.voting.extendVotes = +(state.voting.extendVotes + userWeight).toFixed(1);
+      state.voting.userVotedExtend = true;
 
       if (state.voting.extendVotes >= 60) {
-        // 60% Threshold Met: Add +3 hours to round countdown
+        // 60% Threshold Met: Add +3 hours to countdown
         state.roundEndsAt += 3 * 3600 * 1000;
         state.voting.extendedHours += 3;
         state.voting.extendVotes = 0;
-        showToast(`⏳ 60% Goal Met! Round Extended by +3 Hours! ⚔️`);
+        state.voting.userVotedExtend = false;
+        showToast(`⏳ 60% Goal Met! Round extended by +3 hours! (Fee: ${feeSol} SOL burned) ⚔️`);
       } else {
-        showToast(`🗳️ Vote recorded! Weight: ${state.voting.extendVotes}% / 60%`);
+        showToast(`🗳️ Vote recorded! Added +${userWeight}% weight (Fee: ${feeSol} SOL / $1 USD) → Total: ${state.voting.extendVotes}% / 60%`);
       }
 
       persistData();
@@ -765,6 +828,24 @@
     if (el.tugBullPct) el.tugBullPct.textContent = `${bullPct}%`;
     if (el.tugBearPct) el.tugBearPct.textContent = `${bearPct}%`;
 
+    // Real-Time User Voting Weight & Stake Overview
+    const userWeight = getUserVotingWeight();
+    const feeSol = getVoteFeeInSol();
+
+    if (el.voteTotalStakes) {
+      el.voteTotalStakes.textContent = `${(totalPool / 1000000).toFixed(2)}M $BoB`;
+    }
+    if (el.voteUserStake) {
+      el.voteUserStake.textContent = `${(state.userStaked.amount || 0).toLocaleString()} $BoB`;
+    }
+    if (el.voteUserPower) {
+      el.voteUserPower.textContent = `${userWeight}%`;
+      el.voteUserPower.style.color = userWeight > 0 ? '#00ff88' : '#94a3b8';
+    }
+    if (el.voteFeeDisplay) {
+      el.voteFeeDisplay.textContent = `~$1 USD (${feeSol} SOL)`;
+    }
+
     // Dynamic Fate Voting State
     if (el.rerollProgress) el.rerollProgress.style.width = `${Math.min(100, state.voting.rerollVotes)}%`;
     if (el.rerollCurrentPct) el.rerollCurrentPct.textContent = `${state.voting.rerollVotes}%`;
@@ -776,6 +857,17 @@
 
     if (el.buybackPool) {
       el.buybackPool.textContent = `${state.voting.buybackPoolSol.toFixed(2)} SOL`;
+    }
+
+    // Dynamic Button Labels with Fee and Weight Preview
+    const feeLabel = `~$1 USD (${feeSol} SOL)`;
+    const btnRerollFee = document.querySelector('.btn-vote-fee');
+    if (btnRerollFee) {
+      btnRerollFee.textContent = userWeight > 0 ? `+${userWeight}% | ${feeLabel}` : feeLabel;
+    }
+    const btnExtendFee = document.querySelector('.btn-vote-fee-ext');
+    if (btnExtendFee) {
+      btnExtendFee.textContent = userWeight > 0 ? `+${userWeight}% | ${feeLabel}` : feeLabel;
     }
 
     // User Active Position
