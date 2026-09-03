@@ -408,205 +408,683 @@
   text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
 }
 
-/* SOL Price Row */
-.arena-price-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 20px;
+/* ═══ 2-FACTION CLASH PANEL (BULL VS BEAR) ═══ */
+.arena-clash-panel {
+  padding: 24px;
+  background: radial-gradient(circle at 50% 30%, rgba(15, 23, 42, 0.9) 0%, rgba(6, 6, 12, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   margin-bottom: 28px;
 }
 
-@media (max-width: 768px) {
-  .arena-price-row {
+.arena-clash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .arena-clash-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
 }
 
-.arena-price-card {
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(2, 6, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+/* Faction Cards (Bull & Bear) */
+.arena-faction-card {
+  border-radius: 20px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.arena-price-target {
-  border-color: rgba(234, 179, 8, 0.25);
-  box-shadow: inset 0 0 20px rgba(234, 179, 8, 0.04);
+.arena-faction-card:hover {
+  transform: translateY(-2px);
 }
 
-.arena-price-current {
-  border-color: rgba(56, 189, 248, 0.25);
-  box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.04);
+/* 🟢 Bull Faction Card */
+.clash-bull-card {
+  background: linear-gradient(165deg, rgba(6, 78, 59, 0.35) 0%, rgba(2, 44, 34, 0.2) 60%, rgba(6, 6, 12, 0.7) 100%);
+  border: 1.5px solid rgba(0, 255, 136, 0.35);
+  box-shadow: inset 0 0 35px rgba(0, 255, 136, 0.08), 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
-.arena-price-label {
+.clash-bull-card:hover {
+  border-color: #00ff88;
+  box-shadow: inset 0 0 45px rgba(0, 255, 136, 0.15), 0 15px 40px rgba(0, 255, 136, 0.15);
+}
+
+/* 🔴 Bear Faction Card */
+.clash-bear-card {
+  background: linear-gradient(165deg, rgba(127, 29, 29, 0.35) 0%, rgba(69, 10, 10, 0.2) 60%, rgba(6, 6, 12, 0.7) 100%);
+  border: 1.5px solid rgba(255, 68, 68, 0.35);
+  box-shadow: inset 0 0 35px rgba(255, 68, 68, 0.08), 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.clash-bear-card:hover {
+  border-color: #ff4444;
+  box-shadow: inset 0 0 45px rgba(255, 68, 68, 0.15), 0 15px 40px rgba(255, 68, 68, 0.15);
+}
+
+.clash-badge {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clash-badge-bull {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.4);
+}
+
+.clash-badge-bear {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.4);
+}
+
+.clash-dot-bull {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  animation: pulse-live 1.8s infinite;
+}
+
+.clash-dot-bear {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff4444;
+  box-shadow: 0 0 8px #ff4444;
+  animation: pulse-live 1.8s infinite;
+}
+
+.clash-mascot {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6));
+  transition: transform 0.2s ease;
+}
+
+.arena-faction-card:hover .clash-mascot {
+  transform: scale(1.08);
+}
+
+.clash-faction-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.clash-title-bull {
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+}
+
+.clash-title-bear {
+  color: #ff4444;
+  text-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+}
+
+.clash-pool-info {
+  margin-bottom: 10px;
+}
+
+.clash-pool-label {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
-.arena-price-value {
+.clash-pool-amount {
   font-family: 'Orbitron', monospace;
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: #f8fafc;
-  display: block;
-  margin-bottom: 4px;
 }
 
-.arena-price-target .arena-price-value {
-  color: #fbbf24;
+.clash-share-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
-.arena-price-current .arena-price-value {
-  color: #38bdf8;
+.clash-share-bull {
+  background: rgba(0, 255, 136, 0.12);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
-.arena-price-sub {
-  font-size: 0.75rem;
-  color: #64748b;
+.clash-share-bear {
+  background: rgba(255, 68, 68, 0.12);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
 }
 
-.arena-price-vs {
-  font-family: 'Orbitron', monospace;
-  font-size: 1.1rem;
-  font-weight: 900;
-  color: #475569;
-  text-align: center;
-}
-
-/* Pools */
-.arena-pools {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-@media (max-width: 640px) {
-  .arena-pools {
-    grid-template-columns: 1fr;
-  }
-}
-
-.arena-pool {
-  padding: 18px 20px;
+.clash-choose-btn {
+  width: 100%;
+  padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(2, 6, 23, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.arena-pool-bull {
-  border-left: 4px solid #00ff88;
-}
-
-.arena-pool-bear {
-  border-left: 4px solid #ff4444;
-}
-
-.arena-pool-header {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  margin-top: auto;
+}
+
+.clash-choose-bull {
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+}
+
+.clash-choose-bull:hover {
+  background: #00ff88;
+  color: #06060c;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.clash-choose-bear {
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid rgba(255, 68, 68, 0.4);
+  color: #ff4444;
+}
+
+.clash-choose-bear:hover {
+  background: #ff4444;
+  color: #06060c;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+}
+
+/* ⚡ CENTER HUB: LIVE SOL TANK + TUG-OF-WAR ⚡ */
+.arena-center-hub {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.sol-live-feed-card {
+  width: 100%;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1.5px solid rgba(56, 189, 248, 0.3);
+  border-radius: 18px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.05), 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.sol-live-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.arena-pool-name {
+.sol-live-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: pulse-live 1.6s infinite;
+}
+
+.sol-live-label {
   font-family: 'Rajdhani', sans-serif;
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 1px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
 }
 
-.arena-pool-bull .arena-pool-name { color: #00ff88; }
-.arena-pool-bear .arena-pool-name { color: #ff4444; }
-
-.arena-pool-amount {
-  font-family: 'Orbitron', monospace;
-  font-size: 1.35rem;
-  font-weight: 700;
-  display: block;
-  margin-bottom: 10px;
-  color: #f1f5f9;
-}
-
-.arena-pool-bar-track {
-  width: 100%;
-  height: 8px;
+.sol-network-tag {
+  font-size: 0.65rem;
+  padding: 2px 6px;
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  overflow: hidden;
+  border-radius: 4px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sol-live-price-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 6px;
 }
 
-.arena-pool-bar {
+.sol-live-price {
+  font-family: 'Orbitron', monospace;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #38bdf8;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+  transition: color 0.3s ease;
+}
+
+.sol-price-flash-up {
+  color: #00ff88 !important;
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.8) !important;
+}
+
+.sol-price-flash-down {
+  color: #ff4444 !important;
+  text-shadow: 0 0 30px rgba(255, 68, 68, 0.8) !important;
+}
+
+.sol-live-change {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+.sol-live-change.negative {
+  color: #ff4444;
+}
+
+.sol-live-footer {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* VS Divider */
+.clash-vs-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 16px 0 12px;
+  gap: 12px;
+}
+
+.clash-vs-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+.clash-vs-bolt {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #fbbf24;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+}
+
+/* Tug-of-War Battle Gauge */
+.clash-tug-section {
+  width: 100%;
+}
+
+.clash-tug-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.tug-bull-text {
+  color: #00ff88;
+}
+
+.tug-bear-text {
+  color: #ff4444;
+}
+
+.clash-tug-track {
+  width: 100%;
+  height: 14px;
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.clash-tug-bar {
   height: 100%;
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 999px;
 }
 
-.arena-pool-bar-bull {
-  background: linear-gradient(90deg, #00ff88, #059669);
-  box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+.clash-tug-bull {
+  background: linear-gradient(90deg, #059669, #00ff88);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.6);
 }
 
-.arena-pool-bar-bear {
+.clash-tug-bear {
   background: linear-gradient(90deg, #ff4444, #dc2626);
-  box-shadow: 0 0 12px rgba(255, 68, 68, 0.4);
+  box-shadow: 0 0 16px rgba(255, 68, 68, 0.6);
 }
 
-.arena-pool-pct {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: #94a3b8;
-  display: block;
-  text-align: right;
+.clash-tug-spark {
+  width: 4px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: 0 0 12px #ffffff, 0 0 20px #fbbf24;
+  z-index: 2;
 }
 
-/* ═══ ACTION GRID (STAKE + VOTE) ═══ */
-.arena-action-grid {
+.clash-tug-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ═══ STREAMLINED STAKE & ACTIVITY GRID ═══ */
+.arena-streamlined-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
   margin-bottom: 28px;
 }
 
 @media (max-width: 900px) {
-  .arena-action-grid {
+  .arena-streamlined-grid {
     grid-template-columns: 1fr;
   }
 }
 
 .arena-card {
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  padding: 28px;
+  padding: 26px;
   backdrop-filter: blur(16px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
+.arena-stake-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
+}
+
 .arena-card-title {
   font-family: 'Orbitron', monospace;
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 6px;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: #f8fafc;
+  margin: 0;
 }
 
-.arena-card-desc {
-  font-size: 0.85rem;
+.arena-step-tag {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+}
+
+.arena-field-label {
+  display: block;
+  font-size: 0.82rem;
   color: #94a3b8;
-  margin-bottom: 20px;
-  line-height: 1.5;
+  margin-bottom: 8px;
+  font-weight: 600;
 }
 
-/* Staking Controls */
+/* Duel Selector Buttons */
+.arena-duel-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.faction-btn-mascot {
+  font-size: 2rem;
+}
+
+.faction-btn-text {
+  text-align: left;
+}
+
+.faction-btn-text strong {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.faction-btn-text small {
+  display: block;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.arena-faction-btn {
+  background: rgba(2, 6, 23, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.arena-faction-btn.active.arena-faction-bull {
+  background: rgba(0, 255, 136, 0.12);
+  border-color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.25);
+}
+
+.arena-faction-btn.active.arena-faction-bull strong {
+  color: #00ff88;
+}
+
+.arena-faction-btn.active.arena-faction-bear {
+  background: rgba(255, 68, 68, 0.12);
+  border-color: #ff4444;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.25);
+}
+
+.arena-faction-btn.active.arena-faction-bear strong {
+  color: #ff4444;
+}
+
+.arena-confirm-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+/* Position & Live Feed Activity */
+.arena-position-box {
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.arena-section-subtitle {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.arena-position-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+@media (max-width: 600px) {
+  .arena-position-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.pos-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.pos-lbl {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.pos-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.arena-reward-val {
+  color: #00ff88;
+}
+
+/* Live Feed Activity */
+.arena-live-feed-section {
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.feed-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  animation: pulse-live 1.5s infinite;
+}
+
+.feed-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.arena-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feed-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  border-left: 3px solid #64748b;
+  font-size: 0.8rem;
+}
+
+.feed-bull {
+  border-left-color: #00ff88;
+}
+
+.feed-bear {
+  border-left-color: #ff4444;
+}
+
+.feed-user {
+  font-family: 'JetBrains Mono', monospace;
+  color: #cbd5e1;
+}
+
+.feed-side {
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.feed-amt {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.feed-bull .feed-amt {
+  color: #00ff88;
+}
+
+.feed-bear .feed-amt {
+  color: #ff4444;
+}
+
+.feed-time {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+/* Staking Inputs & Buttons */
 .arena-balance-row {
   display: flex;
   justify-content: space-between;
@@ -615,12 +1093,12 @@
   padding: 12px 16px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .arena-balance-label {
   font-size: 0.85rem;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .arena-balance-value {
@@ -630,46 +1108,8 @@
   color: #00ff88;
 }
 
-.arena-faction-choose {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.arena-faction-btn {
-  background: rgba(2, 6, 23, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 14px;
-  color: #94a3b8;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.arena-faction-btn.active.arena-faction-bull {
-  background: rgba(0, 255, 136, 0.12);
-  border-color: #00ff88;
-  color: #00ff88;
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-}
-
-.arena-faction-btn.active.arena-faction-bear {
-  background: rgba(255, 68, 68, 0.12);
-  border-color: #ff4444;
-  color: #ff4444;
-  box-shadow: 0 0 20px rgba(255, 68, 68, 0.2);
-}
-
 .arena-input-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .arena-input-wrap {
@@ -717,7 +1157,7 @@
 
 .arena-quick-btns {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -725,12 +1165,13 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  padding: 6px;
+  padding: 8px 4px;
   color: #94a3b8;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
 .arena-quick-btn:hover {
@@ -746,41 +1187,7 @@
   margin-top: 6px;
 }
 
-/* My Position */
-.arena-position {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.arena-position-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #cbd5e1;
-}
-
-.arena-position-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  color: #64748b;
-  margin-bottom: 8px;
-}
-
-.arena-position-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-  color: #f1f5f9;
-}
-
-.arena-reward-val {
-  color: #00ff88;
-}
-
 .arena-claim-btn {
-  margin-top: 14px;
   border-color: rgba(234, 179, 8, 0.3);
   color: #fbbf24;
 }
@@ -802,132 +1209,6 @@
   color: #64748b;
   margin-top: 6px;
 }
-
-/* ═══ VOTING PANEL ═══ */
-.arena-vote-section {
-  background: rgba(2, 6, 23, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 16px;
-}
-
-.arena-vote-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.arena-vote-icon {
-  font-size: 1.5rem;
-}
-
-.arena-vote-title {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #f8fafc;
-}
-
-.arena-vote-desc {
-  font-size: 0.78rem;
-  color: #64748b;
-}
-
-.arena-vote-progress-wrap {
-  margin-bottom: 14px;
-}
-
-.arena-vote-progress-track {
-  position: relative;
-  width: 100%;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-
-.arena-vote-progress-fill {
-  height: 100%;
-  transition: width 0.5s ease;
-  border-radius: 999px;
-}
-
-.arena-vote-fill-green {
-  background: linear-gradient(90deg, #10b981, #00ff88);
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-}
-
-.arena-vote-fill-blue {
-  background: linear-gradient(90deg, #0284c7, #38bdf8);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-}
-
-.arena-vote-threshold {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 60%;
-  width: 2px;
-  background: #fbbf24;
-  box-shadow: 0 0 6px #fbbf24;
-}
-
-.arena-vote-progress-labels {
-  display: flex;
-  justify-content: space-between;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.arena-vote-threshold-label {
-  color: #fbbf24;
-}
-
-.arena-vote-action-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.arena-vote-btn {
-  flex: 1;
-  padding: 10px 14px;
-  font-size: 0.85rem;
-  text-align: center;
-}
-
-.arena-vote-uses {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-family: 'JetBrains Mono', monospace;
-  white-space: nowrap;
-}
-
-/* Buyback Tracker */
-.arena-buyback-tracker {
-  background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(56, 189, 248, 0.05));
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  border-radius: 14px;
-  padding: 18px;
-  text-align: center;
-}
-
-.arena-buyback-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: #cbd5e1;
-  margin-bottom: 6px;
-}
-
-.arena-buyback-amount {
   font-family: 'Orbitron', monospace;
   font-size: 1.6rem;
   font-weight: 800;

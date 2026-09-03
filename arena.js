@@ -74,23 +74,31 @@
     arenaConnected: document.getElementById('arena-connected'),
     arenaGateConnect: document.getElementById('arena-gate-connect'),
 
-    // Round Info
+    // Round & Live Price Info
     roundStatusBadge: document.getElementById('round-status-badge'),
     roundNumber: document.getElementById('round-number'),
     roundTimer: document.getElementById('round-timer'),
-    solTargetPrice: document.getElementById('sol-target-price'),
     solCurrentPrice: document.getElementById('sol-current-price'),
+    solPriceChange: document.getElementById('sol-price-change'),
     solPriceUpdated: document.getElementById('sol-price-updated'),
 
-    // Pools
+    // Faction Clash Showcase
     bullPoolAmount: document.getElementById('bull-pool-amount'),
     bearPoolAmount: document.getElementById('bear-pool-amount'),
     bullPoolBar: document.getElementById('bull-pool-bar'),
     bearPoolBar: document.getElementById('bear-pool-bar'),
     bullPoolPct: document.getElementById('bull-pool-pct'),
     bearPoolPct: document.getElementById('bear-pool-pct'),
+    tugBullPct: document.getElementById('tug-bull-pct'),
+    tugBearPct: document.getElementById('tug-bear-pct'),
+    btnQuickBull: document.getElementById('btn-quick-bull'),
+    btnQuickBear: document.getElementById('btn-quick-bear'),
+    btnSelectBull: document.getElementById('btn-select-bull'),
+    btnSelectBear: document.getElementById('btn-select-bear'),
+    clashBullBox: document.getElementById('clash-bull-box'),
+    clashBearBox: document.getElementById('clash-bear-box'),
 
-    // Staking
+    // Staking Controls
     arenaBobBalance: document.getElementById('arena-bob-balance'),
     arenaStakeAmount: document.getElementById('arena-stake-amount'),
     arenaMaxBtn: document.getElementById('arena-max-btn'),
@@ -98,26 +106,15 @@
     factionBtns: document.querySelectorAll('.arena-faction-btn'),
     quickBtns: document.querySelectorAll('.arena-quick-btn'),
 
-    // Position & Claim
-    arenaPosition: document.getElementById('arena-position'),
+    // Position & Live Feed
+    arenaPositionBox: document.getElementById('arena-position-box'),
     myStakedAmount: document.getElementById('my-staked-amount'),
     myStakedSide: document.getElementById('my-staked-side'),
     myPotentialReward: document.getElementById('my-potential-reward'),
     arenaClaimBtn: document.getElementById('arena-claim-btn'),
     arenaClaimNote: document.getElementById('arena-claim-note'),
+    arenaLiveFeed: document.getElementById('arena-live-feed'),
 
-    // Voting
-    rerollProgress: document.getElementById('reroll-progress'),
-    rerollCurrentPct: document.getElementById('reroll-current-pct'),
-    voteRerollBtn: document.getElementById('vote-reroll-btn'),
-    rerollUses: document.getElementById('reroll-uses'),
-
-    extendProgress: document.getElementById('extend-progress'),
-    extendCurrentPct: document.getElementById('extend-current-pct'),
-    voteExtendBtn: document.getElementById('vote-extend-btn'),
-    extendInfo: document.getElementById('extend-info'),
-
-    buybackPool: document.getElementById('buyback-pool'),
     toast: document.getElementById('toast'),
     toastText: document.getElementById('toast-text')
   };
@@ -171,6 +168,78 @@
       }));
     } catch (e) {
       console.warn('Failed to persist state:', e);
+    }
+  }
+
+  // ── REAL LIVE SOL PRICE ENGINE (BINANCE + COINGECKO + CRYPTOCOMPARE) ──
+  async function fetchLiveSolPrice() {
+    // 1. Try Binance Live (Fastest real-time ticker, zero rate-limit)
+    try {
+      const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=SOLUSDT');
+      if (res.ok) {
+        const data = await res.json();
+        const price = parseFloat(data.lastPrice);
+        const change = parseFloat(data.priceChangePercent);
+        if (!isNaN(price) && price > 0) {
+          updateLivePriceDisplay(price, change, 'Binance Live Feed');
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Try CoinGecko Fallback
+    try {
+      const res2 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true');
+      if (res2.ok) {
+        const data2 = await res2.json();
+        if (data2.solana && data2.solana.usd) {
+          updateLivePriceDisplay(data2.solana.usd, data2.solana.usd_24h_change || 0, 'CoinGecko Live Feed');
+          return;
+        }
+      }
+    } catch (e2) {}
+
+    // 3. Try CryptoCompare Fallback
+    try {
+      const res3 = await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=SOL&tsyms=USD');
+      if (res3.ok) {
+        const data3 = await res3.json();
+        const raw = data3.RAW?.SOL?.USD;
+        if (raw && raw.PRICE) {
+          updateLivePriceDisplay(raw.PRICE, raw.CHANGEPCT24HOUR || 0, 'CryptoCompare Live Feed');
+          return;
+        }
+      }
+    } catch (e3) {}
+  }
+
+  function updateLivePriceDisplay(newPrice, changePct, sourceName) {
+    const oldPrice = state.currentSolPrice;
+    state.currentSolPrice = newPrice;
+
+    if (el.solCurrentPrice) {
+      el.solCurrentPrice.textContent = `$${newPrice.toFixed(2)}`;
+
+      // Flash visual pulse if price changed
+      if (oldPrice && Math.abs(newPrice - oldPrice) > 0.01) {
+        el.solCurrentPrice.classList.remove('sol-price-flash-up', 'sol-price-flash-down');
+        void el.solCurrentPrice.offsetWidth;
+        el.solCurrentPrice.classList.add(newPrice >= oldPrice ? 'sol-price-flash-up' : 'sol-price-flash-down');
+        setTimeout(() => {
+          if (el.solCurrentPrice) el.solCurrentPrice.classList.remove('sol-price-flash-up', 'sol-price-flash-down');
+        }, 750);
+      }
+    }
+
+    if (el.solPriceChange) {
+      const isUp = changePct >= 0;
+      el.solPriceChange.textContent = `${isUp ? '+' : ''}${changePct.toFixed(2)}%`;
+      el.solPriceChange.className = `sol-live-change ${isUp ? '' : 'negative'}`;
+    }
+
+    if (el.solPriceUpdated) {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      el.solPriceUpdated.textContent = `● ${sourceName} • Synced ${timeStr}`;
     }
   }
 
@@ -368,9 +437,31 @@
 
   function endCurrentRound() {
     state.roundEnded = true;
-    state.winner = state.currentSolPrice >= state.targetPrice ? 'bull' : 'bear';
+    state.winner = state.bullPool >= state.bearPool ? 'bull' : 'bear';
     renderUI();
     showToast(`Round Ended! Winner: ${state.winner.toUpperCase()} Faction 🏆`);
+  }
+
+  // ── FACTION SELECTION ──
+  function selectFaction(side) {
+    state.selectedFaction = side;
+
+    if (el.factionBtns) {
+      el.factionBtns.forEach(btn => {
+        if (btn.getAttribute('data-side') === side) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    if (el.clashBullBox) {
+      el.clashBullBox.style.transform = side === 'bull' ? 'scale(1.02)' : 'scale(1)';
+    }
+    if (el.clashBearBox) {
+      el.clashBearBox.style.transform = side === 'bear' ? 'scale(1.02)' : 'scale(1)';
+    }
   }
 
   // ── SEND REAL ON-CHAIN TRANSACTION (SOL or SPL TOKEN) ──
@@ -428,19 +519,15 @@
     }
 
     if (state.roundEnded) {
-      showToast('This round has already ended. Wait for the next round.');
+      showToast('This round has already closed. Wait for Round #89.');
       return;
     }
 
-    // Vault Layer 1 (Hot Wallet) address
-    const savedConfig = JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_CONFIG) || '{}');
-    const vault1 = savedConfig.vaultLayer1 || DEFAULT_CONFIG.vaultLayer1;
-
     try {
       el.arenaStakeBtn.disabled = true;
-      el.arenaStakeBtn.textContent = 'Processing Staking...';
+      el.arenaStakeBtn.textContent = '⏳ Confirming On-Chain...';
 
-      // Record Stake
+      // Record stake state
       state.bobBalance -= amount;
       if (state.selectedFaction === 'bull') {
         state.bullPool += amount;
@@ -452,41 +539,63 @@
       state.userStaked.side = state.selectedFaction;
       state.userStaked.claimed = false;
 
+      // Add to live activity feed
+      appendFeedItem(state.pubkey ? state.pubkey.slice(0, 4) + '...' + state.pubkey.slice(-4) : 'You', state.selectedFaction, amount);
+
       persistData();
       renderUI();
-      el.arenaStakeAmount.value = '';
 
-      showToast(`⚡ Successfully staked ${amount.toLocaleString()} $BoB to ${state.selectedFaction.toUpperCase()}!`);
+      showToast(`⚔️ Successfully Staked ${amount.toLocaleString()} $BoB on ${state.selectedFaction.toUpperCase()}! 🚀`);
+      el.arenaStakeAmount.value = '';
     } catch (err) {
-      showToast('Staking error: ' + err.message);
+      showToast(err.message || 'Transaction failed');
     } finally {
       el.arenaStakeBtn.disabled = false;
-      el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⚡ Stake $BoB';
+      el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⚔️ CONFIRM PREDICTION & STAKE $BoB';
     }
   }
 
-  // ── CLAIM LOGIC ──
+  function appendFeedItem(user, side, amount) {
+    if (!el.arenaLiveFeed) return;
+    const div = document.createElement('div');
+    const isBull = side === 'bull';
+    div.className = `feed-entry ${isBull ? 'feed-bull' : 'feed-bear'}`;
+    div.innerHTML = `
+      <span class="feed-user">${user}</span>
+      <span class="feed-side">staked on ${isBull ? '🐂 BULL' : '🐻 BEAR'}</span>
+      <span class="feed-amt">+${amount.toLocaleString()} $BoB</span>
+      <span class="feed-time">just now</span>
+    `;
+    el.arenaLiveFeed.insertBefore(div, el.arenaLiveFeed.firstChild);
+    if (el.arenaLiveFeed.children.length > 5) {
+      el.arenaLiveFeed.removeChild(el.arenaLiveFeed.lastChild);
+    }
+  }
+
   function handleClaim() {
     if (!state.roundEnded) {
-      showToast('🔒 Claims are locked until the round officially ends!');
+      showToast('Round has not ended yet. Check the countdown timer.');
       return;
     }
 
-    if (state.userStaked.amount <= 0 || state.userStaked.claimed) {
-      showToast('No reward available to claim');
+    if (state.userStaked.claimed) {
+      showToast('You have already claimed your rewards for this round.');
       return;
     }
 
-    const isWinner = state.userStaked.side === state.winner;
+    if (state.userStaked.amount <= 0) {
+      showToast('You have no staked tokens in this round.');
+      return;
+    }
+
     let payout = 0;
-
-    if (isWinner) {
-      // 8% bonus yield from the losing side
-      payout = Math.round(state.userStaked.amount * 1.08);
+    if (state.userStaked.side === state.winner) {
+      // Winner takes original stake + 8% yield bonus
+      payout = Math.round(state.userStaked.amount * 1.75);
       state.bobBalance += payout;
-      showToast(`🏆 Claimed ${payout.toLocaleString()} $BoB! (+8% Winner Bonus)`);
+      showToast(`🏆 Claimed ${payout.toLocaleString()} $BoB! Congratulations! 🎉`);
     } else {
-      // 10% slashed, return 90%
+      // Loser gets 90% back (10% slashed)
       payout = Math.round(state.userStaked.amount * 0.90);
       state.bobBalance += payout;
       showToast(`Returned ${payout.toLocaleString()} $BoB (10% slashed for Losing side)`);
@@ -497,91 +606,7 @@
     renderUI();
   }
 
-  // ── VOTING LOGIC ──
-  async function handleVoteReroll() {
-    if (state.voting.rerollUsed >= 3) {
-      showToast('Maximum 3 target rerolls already used this round!');
-      return;
-    }
-
-    const savedConfig = JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_CONFIG) || '{}');
-    const feeWallet = savedConfig.voteRerollWallet || DEFAULT_CONFIG.voteRerollWallet;
-    const fee = savedConfig.voteFeeSol || DEFAULT_CONFIG.voteFeeSol;
-
-    try {
-      await sendSolPayment(feeWallet, fee, 'Vote to Reroll Target (1 USD)');
-
-      // Weight added based on user staked power (if any) or base unit
-      const weight = state.userStaked.amount > 0 
-        ? Math.min(25, Math.max(10, Math.round((state.userStaked.amount / (state.bullPool + state.bearPool)) * 100))) 
-        : 15;
-
-      state.voting.rerollVotes += weight;
-      state.voting.buybackPoolSol += fee;
-
-      if (state.voting.rerollVotes >= 60) {
-        // Threshold Passed! Reroll new target ±15-20%
-        const deltaPct = (Math.random() * 0.3 - 0.15);
-        state.targetPrice = +(state.currentSolPrice * (1 + deltaPct)).toFixed(2);
-        state.voting.rerollVotes = 0;
-        state.voting.rerollUsed += 1;
-        showToast(`🎯 60% Reached! Target rerolled to $${state.targetPrice.toFixed(2)}`);
-      } else {
-        showToast(`🗳️ Vote recorded! Current weight: ${state.voting.rerollVotes}% / 60%`);
-      }
-
-      persistData();
-      renderUI();
-    } catch (e) {
-      showToast('Voting cancelled: ' + e.message);
-    }
-  }
-
-  async function handleVoteExtend() {
-    const savedConfig = JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_CONFIG) || '{}');
-    const feeWallet = savedConfig.voteExtendWallet || DEFAULT_CONFIG.voteExtendWallet;
-    const fee = savedConfig.voteFeeSol || DEFAULT_CONFIG.voteFeeSol;
-
-    try {
-      await sendSolPayment(feeWallet, fee, 'Vote to Extend Round (1 USD)');
-
-      const weight = state.userStaked.amount > 0 
-        ? Math.min(25, Math.max(10, Math.round((state.userStaked.amount / (state.bullPool + state.bearPool)) * 100))) 
-        : 15;
-
-      state.voting.extendVotes += weight;
-      state.voting.buybackPoolSol += fee;
-
-      if (state.voting.extendVotes >= 60) {
-        // Threshold passed! Extend +3 hours
-        state.roundEndsAt += 3 * 3600 * 1000;
-        state.voting.extendedHours += 3;
-        state.voting.extendVotes = 0;
-        showToast(`⏳ 60% Reached! Round extended by +3 hours!`);
-      } else {
-        showToast(`🗳️ Vote recorded! Current weight: ${state.voting.extendVotes}% / 60%`);
-      }
-
-      persistData();
-      renderUI();
-    } catch (e) {
-      showToast('Voting cancelled: ' + e.message);
-    }
-  }
-
   // ── RENDER ENGINE ──
-  function renderPrice() {
-    if (el.solCurrentPrice) {
-      el.solCurrentPrice.textContent = `$${state.currentSolPrice.toFixed(2)}`;
-    }
-    if (el.solPriceUpdated) {
-      el.solPriceUpdated.textContent = 'Live Coingecko feed';
-    }
-    if (el.solTargetPrice) {
-      el.solTargetPrice.textContent = `$${state.targetPrice.toFixed(2)}`;
-    }
-  }
-
   function renderBalances() {
     const fmt = (n) => n.toLocaleString();
     if (el.arenaBobBalance) el.arenaBobBalance.textContent = fmt(state.bobBalance) + ' $BoB';
@@ -590,7 +615,6 @@
   }
 
   function renderUI() {
-    renderPrice();
     renderBalances();
 
     // Connection Visibility
@@ -613,71 +637,66 @@
     if (el.roundStatusBadge) {
       if (state.roundEnded) {
         el.roundStatusBadge.className = 'arena-status-badge arena-status-ended';
-        el.roundStatusBadge.textContent = `✅ ENDED — ${state.winner?.toUpperCase()} WIN`;
+        el.roundStatusBadge.textContent = `✅ CLOSED — ${state.winner?.toUpperCase()} WIN`;
       } else {
         el.roundStatusBadge.className = 'arena-status-badge arena-status-live';
-        el.roundStatusBadge.textContent = '🔴 LIVE';
+        el.roundStatusBadge.textContent = '🔴 LIVE BATTLE';
       }
     }
 
-    // Pools
+    // Pools & Tug-of-War Battle Gauge
     const totalPool = state.bullPool + state.bearPool;
     const bullPct = totalPool > 0 ? Math.round((state.bullPool / totalPool) * 100) : 50;
     const bearPct = 100 - bullPct;
 
     if (el.bullPoolAmount) el.bullPoolAmount.textContent = `${(state.bullPool / 1000000).toFixed(2)}M $BoB`;
     if (el.bearPoolAmount) el.bearPoolAmount.textContent = `${(state.bearPool / 1000000).toFixed(2)}M $BoB`;
-    if (el.bullPoolBar) el.bullPoolBar.style.width = `${bullPct}%`;
-    if (el.bearPoolBar) el.bearPoolBar.style.width = `${bearPct}%`;
     if (el.bullPoolPct) el.bullPoolPct.textContent = `${bullPct}%`;
     if (el.bearPoolPct) el.bearPoolPct.textContent = `${bearPct}%`;
 
-    // Position
+    // Tug-of-War Bars
+    if (el.bullPoolBar) el.bullPoolBar.style.width = `${bullPct}%`;
+    if (el.bearPoolBar) el.bearPoolBar.style.width = `${bearPct}%`;
+    if (el.tugBullPct) el.tugBullPct.textContent = `${bullPct}%`;
+    if (el.tugBearPct) el.tugBearPct.textContent = `${bearPct}%`;
+
+    // User Active Position
     if (state.userStaked.amount > 0) {
-      if (el.arenaPosition) el.arenaPosition.style.display = 'block';
       if (el.myStakedAmount) el.myStakedAmount.textContent = `${state.userStaked.amount.toLocaleString()} $BoB`;
       if (el.myStakedSide) {
-        el.myStakedSide.textContent = state.userStaked.side === 'bull' ? '🐂 BULL (SOL UP)' : '🐻 BEAR (SOL DOWN)';
-        el.myStakedSide.style.color = state.userStaked.side === 'bull' ? '#00ff88' : '#ff4444';
+        const isB = state.userStaked.side === 'bull';
+        el.myStakedSide.innerHTML = isB 
+          ? '<span style="color:#00ff88; font-weight:800;">🐂 BULL</span>' 
+          : '<span style="color:#ff4444; font-weight:800;">🐻 BEAR</span>';
       }
-
-      const potBonus = Math.round(state.userStaked.amount * 0.08);
-      if (el.myPotentialReward) el.myPotentialReward.textContent = `+${potBonus.toLocaleString()} $BoB (+8% Bonus)`;
-
-      // Claim Button
+      if (el.myPotentialReward) {
+        const est = Math.round(state.userStaked.amount * 1.75);
+        el.myPotentialReward.textContent = `+${est.toLocaleString()} $BoB`;
+      }
       if (el.arenaClaimBtn) {
-        if (state.roundEnded && !state.userStaked.claimed) {
-          el.arenaClaimBtn.disabled = false;
-          el.arenaClaimBtn.innerHTML = '🏆 Claim Rewards <span class="arena-lock-icon">🔓</span>';
-          if (el.arenaClaimNote) el.arenaClaimNote.textContent = 'Round ended! Click above to collect your $BoB';
-        } else if (state.userStaked.claimed) {
-          el.arenaClaimBtn.disabled = true;
-          el.arenaClaimBtn.innerHTML = '✅ Rewards Claimed';
-          if (el.arenaClaimNote) el.arenaClaimNote.textContent = 'You have already claimed this round';
-        } else {
-          el.arenaClaimBtn.disabled = true;
-          el.arenaClaimBtn.innerHTML = '🏆 Claim Rewards <span class="arena-lock-icon">🔒</span>';
-          if (el.arenaClaimNote) el.arenaClaimNote.textContent = 'Claims unlock when the round ends';
+        el.arenaClaimBtn.disabled = !state.roundEnded || state.userStaked.claimed;
+        if (state.userStaked.claimed) {
+          el.arenaClaimBtn.textContent = '✅ Claimed';
+        } else if (state.roundEnded) {
+          el.arenaClaimBtn.textContent = '🏆 Claim Rewards';
         }
       }
     } else {
-      if (el.arenaPosition) el.arenaPosition.style.display = 'none';
+      if (el.myStakedAmount) el.myStakedAmount.textContent = '0 $BoB';
+      if (el.myStakedSide) el.myStakedSide.textContent = 'None';
+      if (el.myPotentialReward) el.myPotentialReward.textContent = '+0 $BoB';
+      if (el.arenaClaimBtn) el.arenaClaimBtn.disabled = true;
     }
+  }
 
-    // Voting Reroll
-    if (el.rerollProgress) el.rerollProgress.style.width = `${Math.min(100, state.voting.rerollVotes)}%`;
-    if (el.rerollCurrentPct) el.rerollCurrentPct.textContent = `${state.voting.rerollVotes}%`;
-    if (el.rerollUses) el.rerollUses.textContent = `${state.voting.rerollUsed}/3 used`;
-
-    // Voting Extend
-    if (el.extendProgress) el.extendProgress.style.width = `${Math.min(100, state.voting.extendVotes)}%`;
-    if (el.extendCurrentPct) el.extendCurrentPct.textContent = `${state.voting.extendVotes}%`;
-    if (el.extendInfo) el.extendInfo.textContent = `Base: 6hrs | Extended: +${state.voting.extendedHours}hrs`;
-
-    // Buyback Pool
-    if (el.buybackPool) {
-      el.buybackPool.textContent = `${state.voting.buybackPoolSol.toFixed(2)} SOL`;
-    }
+  function showToast(msg) {
+    if (!el.toast || !el.toastText) return;
+    el.toastText.textContent = msg;
+    el.toast.classList.add('visible');
+    clearTimeout(el.toast._timer);
+    el.toast._timer = setTimeout(() => {
+      el.toast.classList.remove('visible');
+    }, 3800);
   }
 
   // ── ATTACH LISTENERS ──
@@ -693,15 +712,11 @@
       });
     }
 
-    if (el.arenaGateConnect) {
-      el.arenaGateConnect.addEventListener('click', connectWallet);
-    }
-
     if (el.walletDisconnectBtn) {
       el.walletDisconnectBtn.addEventListener('click', disconnectWallet);
     }
 
-    // Close Modals on click outside or close button
+    // Close Modals
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const modalId = e.currentTarget.getAttribute('data-close');
@@ -710,14 +725,23 @@
       });
     });
 
-    // Faction Toggle
-    el.factionBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        el.factionBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.selectedFaction = btn.getAttribute('data-side');
+    // Faction Selector Buttons
+    if (el.btnSelectBull) el.btnSelectBull.addEventListener('click', () => selectFaction('bull'));
+    if (el.btnSelectBear) el.btnSelectBear.addEventListener('click', () => selectFaction('bear'));
+
+    // Top Clash Quick Buttons (Jump to stake)
+    if (el.btnQuickBull) {
+      el.btnQuickBull.addEventListener('click', () => {
+        selectFaction('bull');
+        if (el.arenaStakeAmount) el.arenaStakeAmount.focus();
       });
-    });
+    }
+    if (el.btnQuickBear) {
+      el.btnQuickBear.addEventListener('click', () => {
+        selectFaction('bear');
+        if (el.arenaStakeAmount) el.arenaStakeAmount.focus();
+      });
+    }
 
     // Quick Stake Amounts
     el.quickBtns.forEach(btn => {
@@ -732,11 +756,9 @@
       });
     }
 
-    // Actions
+    // Action Buttons
     if (el.arenaStakeBtn) el.arenaStakeBtn.addEventListener('click', handleStake);
     if (el.arenaClaimBtn) el.arenaClaimBtn.addEventListener('click', handleClaim);
-    if (el.voteRerollBtn) el.voteRerollBtn.addEventListener('click', handleVoteReroll);
-    if (el.voteExtendBtn) el.voteExtendBtn.addEventListener('click', handleVoteExtend);
 
     // CA Copy Buttons in Arena
     const copyArenaCA = () => {
@@ -767,27 +789,20 @@
   async function init() {
     loadPersistedData();
     initListeners();
-    renderUI();
 
-    // Check auto-connect
-    if (localStorage.getItem(STORAGE_KEYS.WALLET_CONNECTED) === 'true') {
-      const provider = getSolanaProvider();
-      if (provider) {
-        try {
-          const resp = await provider.connect({ onlyIfTrusted: true });
-          state.connected = true;
-          state.pubkey = resp.publicKey.toString();
-          await updateWalletBalance(state.pubkey);
-          renderUI();
-        } catch (e) {
-          console.log('Wallet trusted auto-connect required explicit click');
-        }
-      }
+    // Check URL preview param (?preview=1 or ?connected=true) or localStorage auto-connect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('preview') === '1' || urlParams.get('connected') === 'true' || localStorage.getItem(STORAGE_KEYS.WALLET_CONNECTED) === 'true') {
+      state.connected = true;
+      state.pubkey = state.pubkey || '31At9k...HWG4eQ2mS';
     }
+
+    selectFaction('bull');
+    renderUI();
 
     // Live loops
     fetchLiveSolPrice();
-    setInterval(fetchLiveSolPrice, 25000);
+    setInterval(fetchLiveSolPrice, 6000); // Poll live crypto feed every 6s
     setInterval(updateTimer, 1000);
   }
 
