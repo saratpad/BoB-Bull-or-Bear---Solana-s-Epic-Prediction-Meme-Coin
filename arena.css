@@ -180,12 +180,22 @@
   width: 150%;
   height: 150%;
   pointer-events: none;
-  z-index: 2; /* Strictly behind the letters */
+  z-index: 2; /* Strictly behind the letters for fire embers */
+}
+
+.arena-gate-title .lightning-canvas {
+  position: absolute;
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
+  pointer-events: none;
+  z-index: 10; /* Strictly in front of the letters for thunder strikes */
 }
 
 .arena-gate-title .duel-char-b {
   position: relative;
-  z-index: 10; /* Frontmost layer: 100% crisp, zero embers or bolts in front */
+  z-index: 6; /* Mid layer */
   font-family: 'Orbitron', monospace;
   font-size: clamp(2.8rem, 6.5vw, 4.2rem);
   font-weight: 950;
@@ -196,29 +206,29 @@
   text-rendering: geometricPrecision;
 }
 
-/* 🟢 BULL 'B' — 3D CHISELED TITANIUM EMERALD (มิตินูนหนา คมกริบ) */
+/* 🟢 BULL 'B' — 3D LIGHT NEON EMERALD (สีเขียวอ่อนสดใสแบบคำว่า BULL) */
 .arena-gate-title .bull-b {
   color: #00ff88;
   background: linear-gradient(
     175deg,
-    #d1fae5 0%,
-    #34d399 22%,
-    #00ff88 50%,
-    #059669 82%,
-    #022c22 100%
+    #ffffff 0%,
+    #a7f3d0 18%,
+    #00ff88 52%,
+    #05df72 78%,
+    #10b981 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   transform: skewX(-3deg);
-  -webkit-text-stroke: 0.8px rgba(0, 255, 136, 0.25);
+  -webkit-text-stroke: 0.8px rgba(110, 231, 183, 0.4);
   text-shadow:
-    1px 1px 0 #059669,
-    2px 2px 0 #047857,
-    3px 3px 0 #065f46,
+    1px 1px 0 #10b981,
+    2px 2px 0 #059669,
+    3px 3px 0 #047857,
     4px 4px 1px rgba(0, 0, 0, 0.85),
     0 6px 16px rgba(0, 0, 0, 0.95),
-    0 0 16px rgba(0, 255, 136, 0.35);
+    0 0 16px rgba(0, 255, 136, 0.5);
 }
 
 /* 🔴 BEAR 'B' — 3D CHISELED TITANIUM CRIMSON (มิตินูนหนา คมกริบ) */

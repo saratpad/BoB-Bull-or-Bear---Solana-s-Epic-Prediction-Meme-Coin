@@ -674,7 +674,7 @@ button { font-family: inherit; }
   height: clamp(5.5rem, 15vw, 9.8rem);
 }
 
-/* High-Voltage Electric Lightning & Fire Embers Canvas Layer (Behind Letters) */
+/* Background Embers Canvas Layer (Behind Letters) */
 .bonfire-canvas {
   position: absolute;
   top: -25%;
@@ -682,13 +682,24 @@ button { font-family: inherit; }
   width: 150%;
   height: 150%;
   pointer-events: none;
-  z-index: 2; /* Strictly behind the letters so nothing obscures the text */
+  z-index: 2; /* Strictly behind the letters so embers don't obscure */
 }
 
-/* 100% ULTRA CRISP SOLID TYPOGRAPHY — FRONT LAYER, ZERO VISUAL OBSTRUCTION */
+/* Foreground Heavy Lightning Canvas Layer (In Front of Letters) */
+.lightning-canvas {
+  position: absolute;
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
+  pointer-events: none;
+  z-index: 10; /* Strictly IN FRONT of letters so thunder strikes across face */
+}
+
+/* 100% ULTRA CRISP SOLID TYPOGRAPHY — MID LAYER */
 .duel-char-b {
   position: relative;
-  z-index: 10; /* Frontmost layer: 100% crisp, zero embers or bolts in front */
+  z-index: 6; /* Middle layer: in front of embers, behind thunder strikes */
   font-family: 'Orbitron', -apple-system, sans-serif;
   font-size: clamp(5.5rem, 15vw, 9.8rem);
   font-weight: 950;
@@ -701,33 +712,33 @@ button { font-family: inherit; }
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 🟢 BULL 'B' — 3D CHISELED TITANIUM EMERALD (มิตินูนหนา คมกริบ) */
+/* 🟢 BULL 'B' — 3D LIGHT NEON EMERALD (สีเขียวอ่อนสดใสแบบคำว่า BULL) */
 .bull-b {
   color: #00ff88;
   background: linear-gradient(
     175deg,
-    #d1fae5 0%,
-    #34d399 22%,
-    #00ff88 50%,
-    #059669 82%,
-    #022c22 100%
+    #ffffff 0%,
+    #a7f3d0 18%,
+    #00ff88 52%,
+    #05df72 78%,
+    #10b981 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   transform: skewX(-3deg);
-  -webkit-text-stroke: 1px rgba(0, 255, 136, 0.25);
-  /* 3D Extrusion Chamfer Bevels (แท่งโลหะนูน 3D หนาคมกริบ) */
+  -webkit-text-stroke: 1px rgba(110, 231, 183, 0.4);
+  /* 3D Extrusion Chamfer Bevels (แท่งโลหะนูน 3D สีเขียวอ่อนสว่างสดใส) */
   text-shadow:
-    1px 1px 0 #059669,
-    2px 2px 0 #047857,
-    3px 3px 0 #065f46,
-    4px 4px 0 #064e3b,
-    5px 5px 0 #022c22,
+    1px 1px 0 #10b981,
+    2px 2px 0 #059669,
+    3px 3px 0 #047857,
+    4px 4px 0 #065f46,
+    5px 5px 0 #064e3b,
     6px 6px 1px rgba(0, 0, 0, 0.85),
     0 10px 25px rgba(0, 0, 0, 0.95),
     0 20px 45px rgba(0, 0, 0, 0.98),
-    0 0 25px rgba(0, 255, 136, 0.4);
+    0 0 25px rgba(0, 255, 136, 0.55);
 }
 
 /* 🔴 BEAR 'B' — 3D CHISELED TITANIUM CRIMSON (มิตินูนหนา คมกริบ) */
