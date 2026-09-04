@@ -2139,6 +2139,110 @@ button { font-family: inherit; }
 }
 
 .admin-login-form { display: flex; flex-direction: column; }
+
+/* Web3 Dual-Admin Gateway Styles */
+.admin-auth-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.85rem;
+}
+
+.admin-auth-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.admin-auth-label {
+  font-family: var(--font-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-auth-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 50px;
+  text-transform: uppercase;
+}
+.admin-auth-badge.badge-pending {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.admin-auth-badge.badge-authorized {
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.15);
+}
+.admin-auth-badge.badge-unauthorized {
+  background: rgba(255, 68, 68, 0.12);
+  color: var(--red);
+  border: 1px solid rgba(255, 68, 68, 0.35);
+}
+.admin-auth-badge.badge-setup {
+  background: rgba(0, 187, 255, 0.12);
+  color: #00bbff;
+  border: 1px solid rgba(0, 187, 255, 0.35);
+}
+
+.admin-auth-address {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  word-break: break-all;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+}
+
+.admin-status-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-status-box.info {
+  border-color: rgba(0, 187, 255, 0.3);
+  background: rgba(0, 187, 255, 0.04);
+  color: #cceeff;
+}
+.admin-status-box.success {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.04);
+  color: #d4ffed;
+}
+.admin-status-box.danger {
+  border-color: rgba(255, 68, 68, 0.35);
+  background: rgba(255, 68, 68, 0.05);
+  color: #ffd8d8;
+}
+
+.admin-whitelist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0.2rem 0;
+}
+.admin-whitelist-item span:first-child {
+  color: var(--text-dim);
+}
+
 .admin-label { display: block; font-family: var(--font-accent); font-size: 0.8rem; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 0.4rem; text-transform: uppercase; }
 
 .admin-input {

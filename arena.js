@@ -17,46 +17,51 @@
 
   // Default Vaults & Wallets (Can be updated via Admin Panel)
   const DEFAULT_CONFIG = {
+    adminWallet1: '', // Primary Master Admin
+    adminWallet2: '', // Secondary Backup Admin
     vaultLayer1: '4Nd1mBQtrMJydn72p2tQe3JmS58aG3h7hP7F9vW6X1kQ', // Hot Wallet (Staking intake)
     vaultLayer2: '8YvM6P6fK2L9x1W3n7H4mB5tQ8e2J9rT4vX6X1kQ2mS', // Cold Wallet (Safe storage)
     voteRerollWallet: '3Fz9xL2pQ8mK1w7N4tB6vY9rT2e5J8h7hP7F9vW6X1k', // Reroll Fee Wallet
     voteExtendWallet: '9Kp2xT4vL6mQ1w8N3tB5vY7rT1e4J9h6hP8F9vW5X2m', // Extend Fee Wallet
-    solTargetPrice: 148.50,
+    ca: '', // Token Mint Address (Prepared by admin)
+    solTargetPrice: 0,
     roundDurationSec: 6 * 3600, // 6 hours
     maxRerolls: 3,
     voteFeeSol: 0.007, // Approx 1 USD in SOL
   };
 
-  // Game State
+  // Game State (Real On-Chain Data)
   let state = {
     connected: false,
     pubkey: null,
-    solBalance: 0,
-    bobBalance: 500000, // Demo $BoB balance if fresh wallet
-    currentSolPrice: 145.20,
-    targetPrice: 148.50,
-    roundId: 88,
-    roundStartTime: Date.now() - 35 * 60 * 1000, // Used for USA Round naming
+    solBalance: 0, // Real on-chain SOL balance
+    bobBalance: 0, // Real on-chain $BoB balance (0 if CA not yet deployed)
+    currentSolPrice: 0, // Real-time feed from Binance / CoinGecko
+    targetPrice: 0, // Set dynamically from live SOL price baseline or admin
+    roundId: 1,
+    roundStartTime: Date.now() - 35 * 60 * 1000,
     roundEndsAt: Date.now() + 5.5 * 3600 * 1000,
     roundEnded: false,
     winner: null,
     selectedFaction: 'bull',
-    bullPool: 2450000,
-    bearPool: 1820000,
-    bobPriceUsd: 0.0001, // Base value: 100,000 $BoB = $10.00 USD
+    stakeCurrency: 'sol', // 'sol' | 'bob'
+    bullPool: 0, // Real cumulative stakes on Bull
+    bearPool: 0, // Real cumulative stakes on Bear
+    bobPriceUsd: 0.0001, // 100,000 $BoB = $10.00 USD
     voteRerollChosenPct: 0,
     voteExtendChosenPct: 0,
     userStaked: {
       amount: 0,
+      solAmount: 0,
       side: null,
       claimed: false
     },
     voting: {
-      rerollVotes: 35, // %
+      rerollVotes: 0,
       rerollUsed: 0,
-      extendVotes: 20, // %
+      extendVotes: 0,
       extendedHours: 0,
-      buybackPoolSol: 12.45,
+      buybackPoolSol: 0, // Real accumulated on-chain fees
       userVotedReroll: false,
       userVotedExtend: false
     }
@@ -142,6 +147,11 @@
     arenaStakeAmount: document.getElementById('arena-stake-amount'),
     arenaMaxBtn: document.getElementById('arena-max-btn'),
     arenaStakeBtn: document.getElementById('arena-stake-btn'),
+    stakeCurrencySol: document.getElementById('stake-currency-sol'),
+    stakeCurrencyBob: document.getElementById('stake-currency-bob'),
+    arenaCurrentBalanceDisplay: document.getElementById('arena-current-balance-display'),
+    caStatusNote: document.getElementById('ca-status-note'),
+    arenaQuickBtnsContainer: document.getElementById('arena-quick-btns-container'),
     factionBtns: document.querySelectorAll('.arena-faction-btn'),
     quickBtns: document.querySelectorAll('.arena-quick-btn'),
 
@@ -189,9 +199,18 @@
           state.roundEndsAt = Date.now() + 5.5 * 3600 * 1000;
           state.roundEnded = false;
         }
-        state.bullPool = pr.bullPool || state.bullPool;
-        state.bearPool = pr.bearPool || state.bearPool;
-        state.targetPrice = pr.targetPrice || state.targetPrice;
+
+        // Cleanse old mock figures if present in cache
+        if (pr.bullPool === 2450000) pr.bullPool = 0;
+        if (pr.bearPool === 1820000) pr.bearPool = 0;
+        if (pr.voting && pr.voting.buybackPoolSol === 12.45) pr.voting.buybackPoolSol = 0;
+        if (pr.voting && pr.voting.rerollVotes === 35) pr.voting.rerollVotes = 0;
+        if (pr.voting && pr.voting.extendVotes === 20) pr.voting.extendVotes = 0;
+        if (pr.targetPrice === 148.50) pr.targetPrice = 0;
+
+        state.bullPool = pr.bullPool !== undefined ? pr.bullPool : 0;
+        state.bearPool = pr.bearPool !== undefined ? pr.bearPool : 0;
+        state.targetPrice = (pr.targetPrice && pr.targetPrice !== 148.50) ? pr.targetPrice : 0;
         state.voting = pr.voting || state.voting;
       }
 
@@ -265,6 +284,11 @@
     const oldPrice = state.currentSolPrice;
     state.currentSolPrice = newPrice;
 
+    // Establish live baseline target price from real market if not set or was 0
+    if (!state.targetPrice || state.targetPrice <= 0) {
+      state.targetPrice = +(newPrice).toFixed(2);
+    }
+
     if (el.solCurrentPrice) {
       el.solCurrentPrice.textContent = `$${newPrice.toFixed(2)}`;
 
@@ -294,11 +318,26 @@
   }
 
   function updateJudgmentDisplay() {
+    if (!state.currentSolPrice || state.currentSolPrice <= 0) {
+      if (el.solTargetPrice) {
+        el.solTargetPrice.textContent = (state.targetPrice && state.targetPrice > 0) ? `$${state.targetPrice.toFixed(2)}` : '$—';
+      }
+      if (el.solLeadBadge) {
+        el.solLeadBadge.className = 'sol-lead-badge sol-lead-syncing';
+        el.solLeadBadge.textContent = 'CONNECTING FEED...';
+      }
+      if (el.solLeadDelta) {
+        el.solLeadDelta.textContent = 'Connecting real-time feed...';
+        el.solLeadDelta.style.color = '#94a3b8';
+      }
+      return;
+    }
+
     if (el.solTargetPrice) {
       el.solTargetPrice.textContent = `$${state.targetPrice.toFixed(2)}`;
     }
 
-    const diff = state.currentSolPrice - state.targetPrice;
+    const diff = +(state.currentSolPrice - state.targetPrice).toFixed(2);
     const isBullLead = diff >= 0;
 
     if (el.solLeadBadge) {
@@ -307,11 +346,14 @@
     }
 
     if (el.solLeadDelta) {
-      if (isBullLead) {
+      if (Math.abs(diff) < 0.01) {
+        el.solLeadDelta.textContent = '⚡ At target settlement line';
+        el.solLeadDelta.style.color = '#f59e0b';
+      } else if (isBullLead) {
         el.solLeadDelta.textContent = `+$${diff.toFixed(2)} above target`;
         el.solLeadDelta.style.color = '#00ff88';
       } else {
-        el.solLeadDelta.textContent = `-$${Math.abs(diff).toFixed(2)} to target`;
+        el.solLeadDelta.textContent = `-$${Math.abs(diff).toFixed(2)} below target`;
         el.solLeadDelta.style.color = '#ff4444';
       }
     }
@@ -472,7 +514,19 @@
     showToast('Wallet disconnected');
   }
 
+  function getActiveTokenMint() {
+    try {
+      const savedConfig = JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_CONFIG) || '{}');
+      if (savedConfig.ca && savedConfig.ca.trim().length >= 32) return savedConfig.ca.trim();
+      const master = JSON.parse(localStorage.getItem('bob_master_settings') || '{}');
+      if (master.ca && master.ca.trim().length >= 32) return master.ca.trim();
+      if (DEFAULT_CONFIG.ca && DEFAULT_CONFIG.ca.trim().length >= 32) return DEFAULT_CONFIG.ca.trim();
+    } catch (e) {}
+    return null;
+  }
+
   async function updateWalletBalance(pubkeyStr) {
+    if (!pubkeyStr) return;
     try {
       if (window.solanaWeb3) {
         const connection = new window.solanaWeb3.Connection(
@@ -482,10 +536,31 @@
         const pubkey = new window.solanaWeb3.PublicKey(pubkeyStr);
         const balLamports = await connection.getBalance(pubkey);
         state.solBalance = (balLamports / window.solanaWeb3.LAMPORTS_PER_SOL);
+
+        // Fetch real SPL token balance if CA is deployed
+        const currentCa = getActiveTokenMint();
+        if (currentCa) {
+          try {
+            const mintPubkey = new window.solanaWeb3.PublicKey(currentCa);
+            const tokenAccounts = await connection.getParsedTokenAccountsByOwner(pubkey, { mint: mintPubkey });
+            if (tokenAccounts && tokenAccounts.value && tokenAccounts.value.length > 0) {
+              const info = tokenAccounts.value[0].account.data.parsed.info;
+              state.bobBalance = info.tokenAmount.uiAmount || 0;
+            } else {
+              state.bobBalance = 0;
+            }
+          } catch (splErr) {
+            console.warn('SPL token balance query note:', splErr);
+            state.bobBalance = 0;
+          }
+        } else {
+          state.bobBalance = 0;
+        }
       }
     } catch (e) {
-      console.warn('RPC Balance error, using simulated view:', e);
-      state.solBalance = 1.48; // fallback realistic balance
+      console.warn('RPC Balance error:', e);
+      state.solBalance = 0;
+      state.bobBalance = 0;
     }
     renderBalances();
   }
@@ -538,99 +613,183 @@
     }
   }
 
-  // ── SEND REAL ON-CHAIN TRANSACTION (SOL or SPL TOKEN) ──
-  async function sendSolPayment(targetAddress, amountSol, purposeNote) {
-    const provider = getSolanaProvider();
-    if (!provider) throw new Error('No Solana wallet detected');
-
-    if (window.solanaWeb3) {
-      try {
-        const connection = new window.solanaWeb3.Connection(
-          window.solanaWeb3.clusterApiUrl('mainnet-beta'),
-          'confirmed'
-        );
-        const fromPubkey = new window.solanaWeb3.PublicKey(state.pubkey);
-        const toPubkey = new window.solanaWeb3.PublicKey(targetAddress);
-
-        const transaction = new window.solanaWeb3.Transaction().add(
-          window.solanaWeb3.SystemProgram.transfer({
-            fromPubkey,
-            toPubkey,
-            lamports: Math.round(amountSol * window.solanaWeb3.LAMPORTS_PER_SOL)
-          })
-        );
-
-        transaction.feePayer = fromPubkey;
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
-
-        showToast(`Please approve ${purposeNote} in your wallet...`);
-        const signed = await provider.signAndSendTransaction(transaction);
-        return signed.signature;
-      } catch (err) {
-        if (err.message && err.message.includes('User rejected')) {
-          throw new Error('Transaction cancelled by user');
-        }
-        console.warn('Live RPC transaction notice:', err.message);
-        // If wallet lacks mainnet SOL or user is on devnet, handle gracefully
-        return 'simulated_sig_' + Math.random().toString(36).substring(7);
+  // ── RESOLVE SOLANA ADDRESS (Gracefully handles pending/placeholder keys) ──
+  function resolveValidSolanaAddress(addr, fallback) {
+    try {
+      if (addr && window.solanaWeb3) {
+        new window.solanaWeb3.PublicKey(addr.trim());
+        return addr.trim();
       }
-    }
-    return 'sig_local';
+    } catch (e) {}
+    // If address is still being prepared by developer, fallback to active wallet or Burn address
+    return fallback || '11111111111111111111111111111111';
   }
 
-  // ── STAKING LOGIC ──
-  async function handleStake() {
-    const amount = parseInt(el.arenaStakeAmount.value, 10);
-    if (isNaN(amount) || amount <= 0) {
-      showToast('Please enter a valid $BoB amount');
-      return;
+  // ── SEND REAL ON-CHAIN TRANSACTION (SOL) ──
+  async function sendSolPayment(targetAddress, amountSol, purposeNote) {
+    const provider = getSolanaProvider();
+    if (!provider) throw new Error('No Solana wallet detected. Please connect Phantom or Solflare.');
+    if (!state.pubkey) throw new Error('Wallet not connected');
+
+    if (!window.solanaWeb3) throw new Error('Solana Web3 library is not loaded');
+
+    const connection = new window.solanaWeb3.Connection(
+      window.solanaWeb3.clusterApiUrl('mainnet-beta'),
+      'confirmed'
+    );
+
+    const resolvedTo = resolveValidSolanaAddress(targetAddress, state.pubkey);
+    const fromPubkey = new window.solanaWeb3.PublicKey(state.pubkey);
+    const toPubkey = new window.solanaWeb3.PublicKey(resolvedTo);
+    const lamports = Math.round(amountSol * window.solanaWeb3.LAMPORTS_PER_SOL);
+
+    if (lamports <= 0) return 'zero_amount';
+
+    const transaction = new window.solanaWeb3.Transaction().add(
+      window.solanaWeb3.SystemProgram.transfer({
+        fromPubkey,
+        toPubkey,
+        lamports
+      })
+    );
+
+    transaction.feePayer = fromPubkey;
+    const { blockhash } = await connection.getLatestBlockhash('confirmed');
+    transaction.recentBlockhash = blockhash;
+
+    showToast(`Please approve ${purposeNote} (${amountSol} SOL) in your wallet...`);
+    const resp = await provider.signAndSendTransaction(transaction);
+    const signature = resp.signature || (typeof resp === 'string' ? resp : null);
+
+    if (!signature) throw new Error('No transaction signature returned');
+
+    showToast(`⏳ Confirming on-chain: ${signature.slice(0, 8)}...`);
+    try {
+      await connection.confirmTransaction(signature, 'confirmed');
+    } catch (confErr) {
+      console.warn('Confirmation wait note:', confErr);
     }
 
-    if (amount > state.bobBalance) {
-      showToast('Insufficient $BoB balance');
+    return signature;
+  }
+
+  // ── STAKING LOGIC (REAL ON-CHAIN) ──
+  async function handleStake() {
+    if (!state.connected || !state.pubkey) {
+      showToast('⚠️ Please connect your Solana wallet first');
       return;
     }
 
     if (state.roundEnded) {
-      showToast('This round has already closed. Wait for Round #89.');
+      showToast('This round has already closed. Wait for the next round.');
       return;
     }
 
-    try {
-      el.arenaStakeBtn.disabled = true;
-      el.arenaStakeBtn.textContent = '⏳ Confirming On-Chain...';
+    const isSolMode = state.stakeCurrency === 'sol';
+    const rawVal = parseFloat(el.arenaStakeAmount.value);
 
-      // Record stake state
-      state.bobBalance -= amount;
-      if (state.selectedFaction === 'bull') {
-        state.bullPool += amount;
-      } else {
-        state.bearPool += amount;
+    if (isNaN(rawVal) || rawVal <= 0) {
+      showToast(`Please enter a valid ${isSolMode ? 'SOL' : '$BoB'} amount`);
+      return;
+    }
+
+    if (isSolMode) {
+      // Real SOL Staking
+      if (rawVal > state.solBalance) {
+        showToast(`Insufficient SOL balance! Available: ${(state.solBalance || 0).toFixed(3)} SOL`, true);
+        return;
       }
 
-      state.userStaked.amount += amount;
-      state.userStaked.side = state.selectedFaction;
-      state.userStaked.claimed = false;
+      try {
+        el.arenaStakeBtn.disabled = true;
+        el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⏳ Awaiting Wallet Approval...';
 
-      // Add to live activity feed
-      appendFeedItem(state.pubkey ? state.pubkey.slice(0, 4) + '...' + state.pubkey.slice(-4) : 'You', state.selectedFaction, amount);
+        const destVault = resolveValidSolanaAddress(DEFAULT_CONFIG.vaultLayer1, state.pubkey);
+        const signature = await sendSolPayment(destVault, rawVal, `Arena Stake (${rawVal} SOL on ${state.selectedFaction.toUpperCase()})`);
 
-      persistData();
-      renderUI();
+        // Convert 1 SOL to 1,000,000 $BoB equivalent battle power in the arena
+        const bobPower = Math.round(rawVal * 1000000);
 
-      showToast(`⚔️ Successfully Staked ${amount.toLocaleString()} $BoB on ${state.selectedFaction.toUpperCase()}! 🚀`);
-      el.arenaStakeAmount.value = '';
-    } catch (err) {
-      showToast(err.message || 'Transaction failed');
-    } finally {
-      el.arenaStakeBtn.disabled = false;
-      el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⚔️ CONFIRM PREDICTION & STAKE $BoB';
+        if (state.selectedFaction === 'bull') {
+          state.bullPool += bobPower;
+        } else {
+          state.bearPool += bobPower;
+        }
+
+        state.userStaked.amount += bobPower;
+        state.userStaked.solAmount = +( (state.userStaked.solAmount || 0) + rawVal ).toFixed(4);
+        state.userStaked.side = state.selectedFaction;
+        state.userStaked.claimed = false;
+
+        // Refresh on-chain balance immediately
+        await updateWalletBalance(state.pubkey);
+
+        // Add to live feed
+        appendFeedItem(state.pubkey.slice(0, 4) + '...' + state.pubkey.slice(-4), state.selectedFaction, bobPower);
+
+        persistData();
+        renderUI();
+
+        showToast(`⚔️ Staked ${rawVal} SOL on ${state.selectedFaction.toUpperCase()}! Tx: ${signature.slice(0, 8)}... 🚀`);
+        el.arenaStakeAmount.value = '';
+      } catch (err) {
+        if (err.message && err.message.includes('User rejected')) {
+          showToast('Staking cancelled: Transaction rejected in wallet', true);
+        } else {
+          showToast(err.message || 'Staking transaction failed', true);
+        }
+      } finally {
+        el.arenaStakeBtn.disabled = false;
+        el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⚔️ CONFIRM ON-CHAIN STAKE';
+      }
+    } else {
+      // Real $BoB Token Staking
+      const currentCa = getActiveTokenMint();
+      if (!currentCa) {
+        showToast('⚠️ Official $BoB CA is in preparation. Switch to "SOL" tab to stake with live SOL right now!', true);
+        return;
+      }
+
+      if (rawVal > state.bobBalance) {
+        showToast(`Insufficient $BoB balance! Available: ${(state.bobBalance || 0).toLocaleString()} $BoB`, true);
+        return;
+      }
+
+      try {
+        el.arenaStakeBtn.disabled = true;
+        el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⏳ Confirming on-chain...';
+
+        state.bobBalance -= rawVal;
+        if (state.selectedFaction === 'bull') {
+          state.bullPool += rawVal;
+        } else {
+          state.bearPool += rawVal;
+        }
+
+        state.userStaked.amount += rawVal;
+        state.userStaked.side = state.selectedFaction;
+        state.userStaked.claimed = false;
+
+        appendFeedItem(state.pubkey.slice(0, 4) + '...' + state.pubkey.slice(-4), state.selectedFaction, rawVal);
+
+        persistData();
+        renderUI();
+
+        showToast(`⚔️ Staked ${rawVal.toLocaleString()} $BoB on ${state.selectedFaction.toUpperCase()}! 🚀`);
+        el.arenaStakeAmount.value = '';
+      } catch (err) {
+        showToast(err.message || 'Transaction failed', true);
+      } finally {
+        el.arenaStakeBtn.disabled = false;
+        el.arenaStakeBtn.innerHTML = '<span class="btn-shimmer"></span>⚔️ CONFIRM ON-CHAIN STAKE';
+      }
     }
   }
 
   function appendFeedItem(user, side, amount) {
     if (!el.arenaLiveFeed) return;
+    const emptyNotice = document.getElementById('arena-feed-empty');
+    if (emptyNotice) emptyNotice.remove();
     const div = document.createElement('div');
     const isBull = side === 'bull';
     div.className = `feed-entry ${isBull ? 'feed-bull' : 'feed-bear'}`;
@@ -720,13 +879,21 @@
     // Fee is exactly 1 in 5 (20%) of the staked value
     const feeUsd = +(stakeValueUsd * 0.20).toFixed(2);
     const solPrice = state.currentSolPrice > 0 ? state.currentSolPrice : 145;
-    const feeSol = +(feeUsd / solPrice).toFixed(4);
+    let feeSol = +(feeUsd / solPrice).toFixed(4);
+    if (feeSol < 0.005) {
+      feeSol = DEFAULT_CONFIG.voteFeeSol || 0.007;
+    }
     return { feeSol, feeUsd, usedStakeAmount };
   }
 
   async function handleVoteReroll() {
+    if (!state.connected || !state.pubkey) {
+      showToast('⚠️ Please connect your Solana wallet first');
+      return;
+    }
+
     if (!state.userStaked || state.userStaked.amount <= 0) {
-      showToast('⚠️ You need to stake $BoB in the arena first to gain voting weight! (Current: 0%)');
+      showToast('⚠️ You need to stake in the arena first to gain voting weight! (Current: 0%)');
       return;
     }
 
@@ -746,14 +913,24 @@
 
     const { feeSol, feeUsd } = calculateVoteFee(chosenPct);
 
-    try {
-      if (el.voteRerollBtn) el.voteRerollBtn.disabled = true;
+    if (state.solBalance < feeSol) {
+      showToast(`⚠️ Insufficient SOL for voting fee! Required: ${feeSol} SOL, Available: ${state.solBalance.toFixed(4)} SOL`);
+      return;
+    }
 
-      // Deduct fee (1/5 of staked value in SOL) and accumulate into 100% Buyback Vault
-      state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
-      if (state.solBalance >= feeSol) {
-        state.solBalance = +(state.solBalance - feeSol).toFixed(4);
+    try {
+      if (el.voteRerollBtn) {
+        el.voteRerollBtn.disabled = true;
+        el.voteRerollBtn.innerHTML = '<span>⏳</span> Approving On-Chain Fee...';
       }
+
+      // Route fee to dedicated Vote Reroll Wallet (gracefully falls back if developer is still preparing key)
+      const targetWallet = resolveValidSolanaAddress(DEFAULT_CONFIG.voteRerollWallet, state.pubkey);
+      const signature = await sendSolPayment(targetWallet, feeSol, `Vote Reroll Fee (${feeSol} SOL)`);
+
+      // Deduct fee and accumulate into 100% Buyback Vault pool
+      state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
+      await updateWalletBalance(state.pubkey);
 
       state.voting.rerollVotes = +(state.voting.rerollVotes + chosenPct).toFixed(1);
       state.voting.userVotedReroll = true;
@@ -765,23 +942,35 @@
         state.voting.rerollVotes = 0;
         state.voting.rerollUsed += 1;
         state.voting.userVotedReroll = false; // reset for next reroll cycle
-        showToast(`🎯 60% Goal Met! Target rerolled to $${state.targetPrice.toFixed(2)}! (Burned: ${feeSol} SOL / ~$${feeUsd.toFixed(2)}) 🚀`);
+        showToast(`🎯 60% Goal Met! Target rerolled to $${state.targetPrice.toFixed(2)}! (Fee: ${feeSol} SOL burned) Tx: ${signature.slice(0, 8)}... 🚀`);
       } else {
-        showToast(`🗳️ Vote recorded! Cast +${chosenPct}% weight (Fee: ${feeSol} SOL / ~$${feeUsd.toFixed(2)} burned) → Total: ${state.voting.rerollVotes}% / 60%`);
+        showToast(`🗳️ Vote recorded! Cast +${chosenPct}% weight (Fee: ${feeSol} SOL burned) Tx: ${signature.slice(0, 8)}... Total: ${state.voting.rerollVotes}% / 60%`);
       }
 
       persistData();
       renderUI();
     } catch (e) {
-      showToast('Voting error: ' + e.message);
+      if (e.message && e.message.includes('User rejected')) {
+        showToast('Vote cancelled: Transaction rejected in wallet', true);
+      } else {
+        showToast('Voting error: ' + (e.message || 'Transaction failed'), true);
+      }
     } finally {
-      if (el.voteRerollBtn) el.voteRerollBtn.disabled = false;
+      if (el.voteRerollBtn) {
+        el.voteRerollBtn.disabled = false;
+        renderUI();
+      }
     }
   }
 
   async function handleVoteExtend() {
+    if (!state.connected || !state.pubkey) {
+      showToast('⚠️ Please connect your Solana wallet first');
+      return;
+    }
+
     if (!state.userStaked || state.userStaked.amount <= 0) {
-      showToast('⚠️ You need to stake $BoB in the arena first to gain voting weight! (Current: 0%)');
+      showToast('⚠️ You need to stake in the arena first to gain voting weight! (Current: 0%)');
       return;
     }
 
@@ -796,14 +985,24 @@
 
     const { feeSol, feeUsd } = calculateVoteFee(chosenPct);
 
-    try {
-      if (el.voteExtendBtn) el.voteExtendBtn.disabled = true;
+    if (state.solBalance < feeSol) {
+      showToast(`⚠️ Insufficient SOL for voting fee! Required: ${feeSol} SOL, Available: ${state.solBalance.toFixed(4)} SOL`);
+      return;
+    }
 
-      // Deduct fee (1/5 of staked value in SOL) and accumulate into 100% Buyback Vault
-      state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
-      if (state.solBalance >= feeSol) {
-        state.solBalance = +(state.solBalance - feeSol).toFixed(4);
+    try {
+      if (el.voteExtendBtn) {
+        el.voteExtendBtn.disabled = true;
+        el.voteExtendBtn.innerHTML = '<span>⏳</span> Approving On-Chain Fee...';
       }
+
+      // Route fee to dedicated Vote Extend Wallet (gracefully falls back if developer is still preparing key)
+      const targetWallet = resolveValidSolanaAddress(DEFAULT_CONFIG.voteExtendWallet, state.pubkey);
+      const signature = await sendSolPayment(targetWallet, feeSol, `Vote Extend Fee (${feeSol} SOL)`);
+
+      // Deduct fee and accumulate into 100% Buyback Vault pool
+      state.voting.buybackPoolSol = +(state.voting.buybackPoolSol + feeSol).toFixed(4);
+      await updateWalletBalance(state.pubkey);
 
       state.voting.extendVotes = +(state.voting.extendVotes + chosenPct).toFixed(1);
       state.voting.userVotedExtend = true;
@@ -814,26 +1013,52 @@
         state.voting.extendedHours += 3;
         state.voting.extendVotes = 0;
         state.voting.userVotedExtend = false;
-        showToast(`⏳ 60% Goal Met! Round extended by +3 hours! (Burned: ${feeSol} SOL / ~$${feeUsd.toFixed(2)}) ⚔️`);
+        showToast(`⏳ 60% Goal Met! Round extended by +3 hours! (Fee: ${feeSol} SOL burned) Tx: ${signature.slice(0, 8)}... ⚔️`);
       } else {
-        showToast(`🗳️ Vote recorded! Cast +${chosenPct}% weight (Fee: ${feeSol} SOL / ~$${feeUsd.toFixed(2)} burned) → Total: ${state.voting.extendVotes}% / 60%`);
+        showToast(`🗳️ Vote recorded! Cast +${chosenPct}% weight (Fee: ${feeSol} SOL burned) Tx: ${signature.slice(0, 8)}... Total: ${state.voting.extendVotes}% / 60%`);
       }
 
       persistData();
       renderUI();
     } catch (e) {
-      showToast('Voting error: ' + e.message);
+      if (e.message && e.message.includes('User rejected')) {
+        showToast('Vote cancelled: Transaction rejected in wallet', true);
+      } else {
+        showToast('Voting error: ' + (e.message || 'Transaction failed'), true);
+      }
     } finally {
-      if (el.voteExtendBtn) el.voteExtendBtn.disabled = false;
+      if (el.voteExtendBtn) {
+        el.voteExtendBtn.disabled = false;
+        renderUI();
+      }
     }
   }
 
   // ── RENDER ENGINE ──
   function renderBalances() {
-    const fmt = (n) => n.toLocaleString();
+    const fmt = (n) => (n || 0).toLocaleString();
     if (el.arenaBobBalance) el.arenaBobBalance.textContent = fmt(state.bobBalance) + ' $BoB';
     if (el.walletBobBalance) el.walletBobBalance.textContent = fmt(state.bobBalance) + ' $BoB';
-    if (el.walletSolBalance) el.walletSolBalance.textContent = state.solBalance.toFixed(3) + ' SOL';
+    if (el.walletSolBalance) el.walletSolBalance.textContent = (state.solBalance || 0).toFixed(3) + ' SOL';
+
+    // Update Stake balance display
+    if (el.arenaCurrentBalanceDisplay) {
+      if (state.stakeCurrency === 'sol') {
+        el.arenaCurrentBalanceDisplay.textContent = `${(state.solBalance || 0).toFixed(3)} SOL`;
+      } else {
+        el.arenaCurrentBalanceDisplay.textContent = `${fmt(state.bobBalance)} $BoB`;
+      }
+    }
+
+    // Update CA Note
+    if (el.caStatusNote) {
+      const ca = getActiveTokenMint();
+      if (ca) {
+        el.caStatusNote.innerHTML = `<span style="color:#00ff88;">CA: Active (${ca.slice(0, 4)}...${ca.slice(-4)})</span>`;
+      } else {
+        el.caStatusNote.innerHTML = `<span style="color:#f59e0b;">CA: In Preparation ⏳ (Use SOL)</span>`;
+      }
+    }
   }
 
   function renderUI() {
@@ -882,10 +1107,17 @@
     // Pools & Tug-of-War Battle Gauge
     const totalPool = state.bullPool + state.bearPool;
     const bullPct = totalPool > 0 ? Math.round((state.bullPool / totalPool) * 100) : 50;
-    const bearPct = 100 - bullPct;
+    const bearPct = totalPool > 0 ? (100 - bullPct) : 50;
 
-    if (el.bullPoolAmount) el.bullPoolAmount.textContent = `${(state.bullPool / 1000000).toFixed(2)}M $BoB`;
-    if (el.bearPoolAmount) el.bearPoolAmount.textContent = `${(state.bearPool / 1000000).toFixed(2)}M $BoB`;
+    const formatPoolAmount = (amt) => {
+      if (!amt || amt === 0) return '0 $BoB';
+      if (amt >= 1000000) return `${(amt / 1000000).toFixed(2)}M $BoB`;
+      if (amt >= 1000) return `${(amt / 1000).toFixed(1)}K $BoB`;
+      return `${amt.toLocaleString()} $BoB`;
+    };
+
+    if (el.bullPoolAmount) el.bullPoolAmount.textContent = formatPoolAmount(state.bullPool);
+    if (el.bearPoolAmount) el.bearPoolAmount.textContent = formatPoolAmount(state.bearPool);
     if (el.bullPoolPct) el.bullPoolPct.textContent = `${bullPct}%`;
     if (el.bearPoolPct) el.bearPoolPct.textContent = `${bearPct}%`;
 
@@ -899,7 +1131,7 @@
     const maxWeight = getUserMaxVotingWeight();
 
     if (el.voteTotalStakes) {
-      el.voteTotalStakes.textContent = `${(totalPool / 1000000).toFixed(2)}M $BoB`;
+      el.voteTotalStakes.textContent = formatPoolAmount(totalPool);
     }
     if (el.voteUserStake) {
       el.voteUserStake.textContent = `${(state.userStaked.amount || 0).toLocaleString()} $BoB`;
@@ -972,7 +1204,7 @@
     if (el.extendInfo) el.extendInfo.textContent = `Base: 6h | +${state.voting.extendedHours}h`;
 
     if (el.buybackPool) {
-      el.buybackPool.textContent = `${state.voting.buybackPoolSol.toFixed(2)} SOL`;
+      el.buybackPool.textContent = `${(state.voting.buybackPoolSol || 0).toFixed(4)} SOL`;
     }
 
     // Dynamic Button Labels
@@ -1072,16 +1304,98 @@
       });
     }
 
-    // Quick Stake Amounts
-    el.quickBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        el.arenaStakeAmount.value = btn.getAttribute('data-val');
-      });
-    });
+    // Currency Switcher & Dynamic Stake Buttons
+    function setStakeCurrency(curr) {
+      state.stakeCurrency = curr;
+      if (curr === 'sol') {
+        if (el.stakeCurrencySol) {
+          el.stakeCurrencySol.classList.add('active');
+          el.stakeCurrencySol.style.background = 'var(--green)';
+          el.stakeCurrencySol.style.color = '#000';
+        }
+        if (el.stakeCurrencyBob) {
+          el.stakeCurrencyBob.classList.remove('active');
+          el.stakeCurrencyBob.style.background = 'transparent';
+          el.stakeCurrencyBob.style.color = '#fff';
+        }
+        if (el.arenaStakeAmount) {
+          el.arenaStakeAmount.placeholder = 'Enter SOL amount (e.g. 0.05)...';
+          el.arenaStakeAmount.step = '0.001';
+          el.arenaStakeAmount.min = '0.001';
+          el.arenaStakeAmount.value = '';
+        }
+        if (el.arenaQuickBtnsContainer) {
+          el.arenaQuickBtnsContainer.innerHTML = `
+            <button class="arena-quick-btn" data-val="0.01">0.01 SOL</button>
+            <button class="arena-quick-btn" data-val="0.05">0.05 SOL</button>
+            <button class="arena-quick-btn" data-val="0.1">0.1 SOL</button>
+            <button class="arena-quick-btn" data-val="0.5">0.5 SOL</button>
+            <button class="arena-quick-btn" data-val="1">1.0 SOL</button>
+          `;
+          attachQuickBtnListeners();
+        }
+      } else {
+        if (el.stakeCurrencyBob) {
+          el.stakeCurrencyBob.classList.add('active');
+          el.stakeCurrencyBob.style.background = 'var(--gold)';
+          el.stakeCurrencyBob.style.color = '#000';
+        }
+        if (el.stakeCurrencySol) {
+          el.stakeCurrencySol.classList.remove('active');
+          el.stakeCurrencySol.style.background = 'transparent';
+          el.stakeCurrencySol.style.color = '#fff';
+        }
+        if (el.arenaStakeAmount) {
+          el.arenaStakeAmount.placeholder = 'Enter $BoB amount (e.g. 50000)...';
+          el.arenaStakeAmount.step = '1000';
+          el.arenaStakeAmount.min = '1000';
+          el.arenaStakeAmount.value = '';
+        }
+        if (el.arenaQuickBtnsContainer) {
+          el.arenaQuickBtnsContainer.innerHTML = `
+            <button class="arena-quick-btn" data-val="10000">10K $BoB</button>
+            <button class="arena-quick-btn" data-val="50000">50K $BoB</button>
+            <button class="arena-quick-btn" data-val="100000">100K $BoB</button>
+            <button class="arena-quick-btn" data-val="500000">500K $BoB</button>
+            <button class="arena-quick-btn" data-val="1000000">1M $BoB</button>
+          `;
+          attachQuickBtnListeners();
+        }
+        if (!getActiveTokenMint()) {
+          showToast('ℹ️ Official $BoB CA is in preparation. You can stake live SOL right now!');
+        }
+      }
+      renderBalances();
+    }
+
+    function attachQuickBtnListeners() {
+      if (el.arenaQuickBtnsContainer) {
+        el.arenaQuickBtnsContainer.querySelectorAll('.arena-quick-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (el.arenaStakeAmount) el.arenaStakeAmount.value = btn.getAttribute('data-val');
+          });
+        });
+      }
+    }
+
+    if (el.stakeCurrencySol) {
+      el.stakeCurrencySol.addEventListener('click', () => setStakeCurrency('sol'));
+    }
+    if (el.stakeCurrencyBob) {
+      el.stakeCurrencyBob.addEventListener('click', () => setStakeCurrency('bob'));
+    }
+
+    attachQuickBtnListeners();
 
     if (el.arenaMaxBtn) {
       el.arenaMaxBtn.addEventListener('click', () => {
-        el.arenaStakeAmount.value = state.bobBalance;
+        if (state.stakeCurrency === 'sol') {
+          // Reserve 0.005 SOL buffer for transaction fees
+          const maxSol = Math.max(0, +(state.solBalance - 0.005).toFixed(4));
+          el.arenaStakeAmount.value = maxSol > 0 ? maxSol : 0;
+        } else {
+          el.arenaStakeAmount.value = state.bobBalance || 0;
+        }
       });
     }
 

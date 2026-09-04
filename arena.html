@@ -212,9 +212,9 @@
             <h2 class="clash-faction-title clash-title-bull">THE BULLS</h2>
             <div class="clash-pool-info">
               <span class="clash-pool-label">Total Bull Staked</span>
-              <span class="clash-pool-amount" id="bull-pool-amount">2.45M $BoB</span>
+              <span class="clash-pool-amount" id="bull-pool-amount">0 $BoB</span>
             </div>
-            <div class="clash-share-badge clash-share-bull" id="bull-pool-pct">57%</div>
+            <div class="clash-share-badge clash-share-bull" id="bull-pool-pct">50%</div>
             <button class="clash-choose-btn clash-choose-bull" id="btn-quick-bull">
               <span>⚡</span> CHOOSE BULL (UP)
             </button>
@@ -228,7 +228,7 @@
                 <!-- Target Settlement Price -->
                 <div class="sol-price-box sol-box-target">
                   <div class="sol-price-mini-label">🎯 SETTLEMENT TARGET</div>
-                  <div class="sol-target-val" id="sol-target-price">$102.50</div>
+                  <div class="sol-target-val" id="sol-target-price">$—</div>
                   <div class="sol-target-sub">Settle Line</div>
                 </div>
 
@@ -239,9 +239,9 @@
                     <span class="sol-live-tag">LIVE FEED</span>
                   </div>
                   <div class="sol-lead-badge sol-lead-bear" id="sol-lead-badge">
-                    BEAR LEADS 🐻
+                    SYNCING...
                   </div>
-                  <div class="sol-lead-delta" id="sol-lead-delta">-$1.76 to Target</div>
+                  <div class="sol-lead-delta" id="sol-lead-delta">Fetching live price...</div>
                 </div>
 
                 <!-- Live Current SOL Price -->
@@ -267,13 +267,13 @@
             <!-- Tug-of-War Battle Gauge -->
             <div class="clash-tug-section">
               <div class="clash-tug-labels">
-                <span class="tug-bull-text">🐂 BULLS <span id="tug-bull-pct">57%</span></span>
-                <span class="tug-bear-text"><span id="tug-bear-pct">43%</span> BEARS 🐻</span>
+                <span class="tug-bull-text">🐂 BULLS <span id="tug-bull-pct">50%</span></span>
+                <span class="tug-bear-text"><span id="tug-bear-pct">50%</span> BEARS 🐻</span>
               </div>
               <div class="clash-tug-track">
-                <div class="clash-tug-bar clash-tug-bull" id="bull-pool-bar" style="width: 57%;"></div>
+                <div class="clash-tug-bar clash-tug-bull" id="bull-pool-bar" style="width: 50%;"></div>
                 <div class="clash-tug-spark"></div>
-                <div class="clash-tug-bar clash-tug-bear" id="bear-pool-bar" style="width: 43%;"></div>
+                <div class="clash-tug-bar clash-tug-bear" id="bear-pool-bar" style="width: 50%;"></div>
               </div>
               <div class="clash-tug-sub">SOL ≥ Target = Bulls Win 🏆 • SOL &lt; Target = Bears Win 🏆</div>
             </div>
@@ -290,9 +290,9 @@
             <h2 class="clash-faction-title clash-title-bear">THE BEARS</h2>
             <div class="clash-pool-info">
               <span class="clash-pool-label">Total Bear Staked</span>
-              <span class="clash-pool-amount" id="bear-pool-amount">1.82M $BoB</span>
+              <span class="clash-pool-amount" id="bear-pool-amount">0 $BoB</span>
             </div>
-            <div class="clash-share-badge clash-share-bear" id="bear-pool-pct">43%</div>
+            <div class="clash-share-badge clash-share-bear" id="bear-pool-pct">50%</div>
             <button class="clash-choose-btn clash-choose-bear" id="btn-quick-bear">
               <span>⚡</span> CHOOSE BEAR (DOWN)
             </button>
@@ -313,7 +313,7 @@
           </div>
           <div class="vote-buyback-pill">
             <span class="buyback-fire">🔥</span>
-            <span>Buyback Vault: <strong id="buyback-pool">12.45 SOL</strong> (100% burned from voting fees)</span>
+            <span>Buyback Vault: <strong id="buyback-pool">0.0000 SOL</strong> (100% burned from voting fees)</span>
           </div>
         </div>
 
@@ -321,7 +321,7 @@
         <div class="vote-power-overview-box">
           <div class="vote-power-item">
             <span class="v-label">Total Arena Stakes:</span>
-            <strong class="v-val" id="vote-total-stakes">4.27M $BoB</strong>
+            <strong class="v-val" id="vote-total-stakes">0 $BoB</strong>
           </div>
           <div class="vote-power-item">
             <span class="v-label">Your Total Stake:</span>
@@ -350,11 +350,11 @@
             
             <div class="arena-vote-progress-wrap">
               <div class="arena-vote-progress-track">
-                <div class="arena-vote-progress-fill arena-vote-fill-green" id="reroll-progress" style="width: 45%;"></div>
+                <div class="arena-vote-progress-fill arena-vote-fill-green" id="reroll-progress" style="width: 0%;"></div>
                 <div class="arena-vote-threshold" title="60% Threshold to execute"></div>
               </div>
               <div class="arena-vote-progress-labels">
-                <span>Vote Weight: <strong id="reroll-current-pct">45%</strong></span>
+                <span>Vote Weight: <strong id="reroll-current-pct">0%</strong></span>
                 <span class="arena-vote-threshold-label">Goal: 60% of Stakes</span>
               </div>
             </div>
@@ -404,11 +404,11 @@
 
             <div class="arena-vote-progress-wrap">
               <div class="arena-vote-progress-track">
-                <div class="arena-vote-progress-fill arena-vote-fill-blue" id="extend-progress" style="width: 30%;"></div>
+                <div class="arena-vote-progress-fill arena-vote-fill-blue" id="extend-progress" style="width: 0%;"></div>
                 <div class="arena-vote-threshold" title="60% Threshold to execute"></div>
               </div>
               <div class="arena-vote-progress-labels">
-                <span>Vote Weight: <strong id="extend-current-pct">30%</strong></span>
+                <span>Vote Weight: <strong id="extend-current-pct">0%</strong></span>
                 <span class="arena-vote-threshold-label">Goal: 60% of Stakes</span>
               </div>
             </div>
@@ -477,28 +477,36 @@
             </button>
           </div>
 
-          <!-- Step 2: Amount -->
-          <div class="arena-balance-row" style="margin-top: 20px;">
-            <span class="arena-balance-label">2. Enter $BoB Stake (Balance: <strong id="arena-bob-balance">0</strong>)</span>
+          <!-- Step 2: Amount & Currency Toggle (Real SOL / Real $BoB) -->
+          <div class="arena-balance-row" style="margin-top: 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span class="arena-balance-label">2. Enter Stake Amount</span>
+            <div class="stake-curr-toggle" style="display:inline-flex; background:rgba(255,255,255,0.06); padding:2px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);">
+              <button type="button" id="stake-currency-sol" class="stake-curr-btn active" style="background:var(--green); color:#000; border:none; border-radius:4px; padding:3px 9px; font-weight:700; font-size:0.75rem; cursor:pointer;">SOL (Live)</button>
+              <button type="button" id="stake-currency-bob" class="stake-curr-btn" style="background:transparent; color:#fff; border:none; border-radius:4px; padding:3px 9px; font-weight:700; font-size:0.75rem; cursor:pointer;">$BoB (CA)</button>
+            </div>
+          </div>
+          <div style="font-size:0.75rem; color:#94a3b8; margin: 4px 0 10px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
+            <span>Available Balance: <strong id="arena-current-balance-display" style="color:#00ff88;">0.000 SOL</strong></span>
+            <span id="ca-status-note" style="color:#f59e0b; font-size:0.7rem;">CA: Preparing ⏳</span>
           </div>
 
           <div class="arena-input-group">
             <div class="arena-input-wrap">
-              <input type="number" id="arena-stake-amount" class="arena-input" placeholder="Enter amount of $BoB..." min="1" step="1" />
+              <input type="number" id="arena-stake-amount" class="arena-input" placeholder="Enter SOL amount (e.g. 0.05)..." min="0.001" step="0.001" />
               <button id="arena-max-btn" class="arena-max-btn">MAX</button>
             </div>
-            <div class="arena-quick-btns">
-              <button class="arena-quick-btn" data-val="10000">10K</button>
-              <button class="arena-quick-btn" data-val="50000">50K</button>
-              <button class="arena-quick-btn" data-val="100000">100K</button>
-              <button class="arena-quick-btn" data-val="500000">500K</button>
-              <button class="arena-quick-btn" data-val="1000000">1M</button>
+            <div class="arena-quick-btns" id="arena-quick-btns-container">
+              <button class="arena-quick-btn" data-val="0.01">0.01 SOL</button>
+              <button class="arena-quick-btn" data-val="0.05">0.05 SOL</button>
+              <button class="arena-quick-btn" data-val="0.1">0.1 SOL</button>
+              <button class="arena-quick-btn" data-val="0.5">0.5 SOL</button>
+              <button class="arena-quick-btn" data-val="1">1.0 SOL</button>
             </div>
           </div>
 
           <button id="arena-stake-btn" class="btn btn-primary arena-action-btn arena-confirm-btn">
             <span class="btn-shimmer"></span>
-            ⚔️ CONFIRM PREDICTION &amp; STAKE $BoB
+            ⚔️ CONFIRM ON-CHAIN STAKE
           </button>
         </div>
 
@@ -525,7 +533,7 @@
             <button id="arena-claim-btn" class="btn btn-ghost arena-action-btn arena-claim-btn" style="margin-top: 14px;" disabled>
               🏆 Claim Rewards <span class="arena-lock-icon">🔒</span>
             </button>
-            <small class="arena-claim-note" id="arena-claim-note">Rewards unlock automatically when Round #88 closes</small>
+            <small class="arena-claim-note" id="arena-claim-note">Rewards unlock automatically when the round closes</small>
           </div>
 
           <!-- Live Battle Activity Feed -->
@@ -535,29 +543,9 @@
               <span class="feed-title">⚔️ Recent Arena Battles (On-Chain)</span>
             </div>
             <div class="arena-feed-list" id="arena-live-feed">
-              <div class="feed-entry feed-bull">
-                <span class="feed-user">8xP9...3a1k</span>
-                <span class="feed-side">staked on 🐂 BULL</span>
-                <span class="feed-amt">+50,000 $BoB</span>
-                <span class="feed-time">just now</span>
-              </div>
-              <div class="feed-entry feed-bear">
-                <span class="feed-user">4vL2...9e4m</span>
-                <span class="feed-side">staked on 🐻 BEAR</span>
-                <span class="feed-amt">+100,000 $BoB</span>
-                <span class="feed-time">2m ago</span>
-              </div>
-              <div class="feed-entry feed-bull">
-                <span class="feed-user">2mS7...7hP7</span>
-                <span class="feed-side">staked on 🐂 BULL</span>
-                <span class="feed-amt">+250,000 $BoB</span>
-                <span class="feed-time">5m ago</span>
-              </div>
-              <div class="feed-entry feed-bear">
-                <span class="feed-user">9Kp2...5X2m</span>
-                <span class="feed-side">staked on 🐻 BEAR</span>
-                <span class="feed-amt">+75,000 $BoB</span>
-                <span class="feed-time">8m ago</span>
+              <div id="arena-feed-empty" style="color: #94a3b8; font-size: 0.8rem; text-align: center; padding: 22px 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.08);">
+                ⚡ No on-chain stakes placed in this round yet.<br>
+                <span style="font-size: 0.72rem; color: #64748b;">Deploy your SOL or $BoB to initiate the battle! ⚔️</span>
               </div>
             </div>
           </div>

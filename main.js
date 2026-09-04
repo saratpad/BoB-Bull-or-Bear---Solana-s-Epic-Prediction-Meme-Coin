@@ -94,11 +94,24 @@
   // Admin Elements
   const adminTrigger = $('#admin-trigger');
   const adminLoginModal = $('#admin-login-modal');
-  const adminPassword = $('#admin-password');
-  const adminLoginError = $('#admin-login-error');
-  const adminLoginBtn = $('#admin-login-btn');
   const adminPanelModal = $('#admin-panel-modal');
   const adminWalletsBadge = $('#admin-wallets-badge');
+
+  // Web3 Dual-Admin Auth Elements
+  const adminAuthWalletStatus = $('#admin-auth-wallet-status');
+  const adminAuthAddress = $('#admin-auth-address');
+  const adminAuthStatusBox = $('#admin-auth-status-box');
+  const adminAuthIcon = $('#admin-auth-icon');
+  const adminAuthDesc = $('#admin-auth-desc');
+  const adminConnectWalletBtn = $('#admin-connect-wallet-btn');
+  const adminSignAuthBtn = $('#admin-sign-auth-btn');
+  const adminClaimSetupBtn = $('#admin-claim-setup-btn');
+  const adminPreviewW1 = $('#admin-preview-w1');
+  const adminPreviewW2 = $('#admin-preview-w2');
+  const adminWallet1Input = $('#admin-wallet1-input');
+  const adminWallet2Input = $('#admin-wallet2-input');
+  const adminSetCurrentW1Btn = $('#admin-set-current-w1-btn');
+  const adminSetCurrentW2Btn = $('#admin-set-current-w2-btn');
 
   // Admin Tab Inputs
   const adminCaInput = $('#admin-ca-input');
@@ -138,13 +151,11 @@
   const adminCircuitBreakerBtn = $('#admin-circuit-breaker-btn');
   const adminEmergencyScript = $('#admin-emergency-script');
   const adminRunScriptBtn = $('#admin-run-script-btn');
-
-  const adminRefreshWalletsBtn = $('#admin-refresh-wallets-btn');
-  const adminExportWalletsBtn = $('#admin-export-wallets-btn');
-  const adminWalletsTbody = $('#admin-wallets-tbody');
-
   const adminSaveAllBtn = $('#admin-save-all-btn');
   const adminLogoutBtn = $('#admin-logout-btn');
+  const adminWalletsTableBody = $('#admin-wallets-table-body');
+  const adminRefreshWalletsBtn = $('#admin-refresh-wallets-btn');
+  const adminExportWalletsBtn = $('#admin-export-wallets-btn');
 
   // Toast
   const toast = $('#toast');
@@ -159,7 +170,10 @@
     gameUrl: '',
     gameVisible: false,
     tagline: 'The Ultimate GameFi Prediction Market',
-    // Multi-Wallet Security Architecture (4 Wallets)
+    // Dual-Admin Whitelist (2 Authorized Wallets)
+    adminWallet1: '', // Primary Master Admin
+    adminWallet2: '', // Secondary Backup Admin
+    // Multi-Vault Security Architecture
     vaultAddress: '4Nd1mBQtrMJydn72p2tQe3JmS58aG3h7hP7F9vW6X1kQ', // Hot Vault (Intake)
     vaultLayer2: '8YvM6P6fK2L9x1W3n7H4mB5tQ8e2J9rT4vX6X1kQ2mS',  // Cold Vault (Safety)
     voteRerollWallet: '3Fz9xL2pQ8mK1w7N4tB6vY9rT2e5J8h7hP7F9vW6X1k', // Reroll Fee
@@ -610,6 +624,11 @@
 
     // Record in connected wallets registry
     recordConnectedWallet(walletAddress, realSolBalance, userStakedSol, selectedFaction);
+
+    // Update Admin Gateway state if modal is open
+    if (typeof updateAdminAuthModalState === 'function') {
+      updateAdminAuthModalState();
+    }
   }
 
   async function fetchLiveWalletBalances() {
@@ -649,6 +668,14 @@
     walletAddress = '';
     activeWalletProvider = null;
 
+    // Terminate active admin session upon wallet disconnect (Auto-Lockdown)
+    if (isAdminLoggedIn) {
+      isAdminLoggedIn = false;
+      sessionStorage.removeItem('bob_admin_session');
+      closeModal('admin-panel-modal');
+      showToast('Admin session auto-locked: Wallet disconnected', true);
+    }
+
     if (walletBtnText) walletBtnText.textContent = 'Connect Wallet';
     if (walletBtnTextMobile) walletBtnTextMobile.textContent = 'Connect';
     if (walletConnectBtn) walletConnectBtn.classList.remove('connected');
@@ -659,6 +686,10 @@
 
     closeModal('wallet-info-modal');
     showToast('Wallet disconnected');
+
+    if (typeof updateAdminAuthModalState === 'function') {
+      updateAdminAuthModalState();
+    }
   }
 
   function updateWalletInfoModal() {
@@ -832,18 +863,72 @@
     // Admin entry trigger
     adminTrigger.addEventListener('click', () => {
       if (isAdminLoggedIn) {
-        loadAdminSettings();
-        openModal('admin-panel-modal');
-      } else {
-        openModal('admin-login-modal');
+        // Validate that current connected wallet still matches active admin session
+        try {
+          const session = JSON.parse(sessionStorage.getItem('bob_admin_session') || '{}');
+          const currentKey = (activeWalletProvider && activeWalletProvider.publicKey) 
+            ? activeWalletProvider.publicKey.toString() 
+            : walletAddress;
+          const s = getAdminSettings();
+          if (currentKey && (currentKey === s.adminWallet1 || currentKey === s.adminWallet2) && session.wallet === currentKey) {
+            loadAdminSettings();
+            openModal('admin-panel-modal');
+            return;
+          }
+        } catch (e) {}
+        // If session not valid for current wallet, reset
+        isAdminLoggedIn = false;
+        sessionStorage.removeItem('bob_admin_session');
       }
+
+      updateAdminAuthModalState();
+      openModal('admin-login-modal');
     });
 
-    // Login
-    adminLoginBtn.addEventListener('click', attemptAdminLogin);
-    adminPassword.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') attemptAdminLogin();
-    });
+    // Web3 Dual-Admin Auth Actions
+    if (adminConnectWalletBtn) {
+      adminConnectWalletBtn.addEventListener('click', () => {
+        closeModal('admin-login-modal');
+        openModal('wallet-modal');
+      });
+    }
+
+    if (adminSignAuthBtn) {
+      adminSignAuthBtn.addEventListener('click', handleAdminSignAuth);
+    }
+
+    if (adminClaimSetupBtn) {
+      adminClaimSetupBtn.addEventListener('click', handleAdminClaimSetup);
+    }
+
+    // Set Current Wallet shortcut buttons in Tab 2
+    if (adminSetCurrentW1Btn) {
+      adminSetCurrentW1Btn.addEventListener('click', () => {
+        const currentKey = (activeWalletProvider && activeWalletProvider.publicKey) ? activeWalletProvider.publicKey.toString() : walletAddress;
+        if (!currentKey) {
+          showToast('Connect wallet first to capture address', true);
+          return;
+        }
+        if (adminWallet1Input) {
+          adminWallet1Input.value = currentKey;
+          showToast('Assigned Admin 1: ' + formatAddress(currentKey));
+        }
+      });
+    }
+
+    if (adminSetCurrentW2Btn) {
+      adminSetCurrentW2Btn.addEventListener('click', () => {
+        const currentKey = (activeWalletProvider && activeWalletProvider.publicKey) ? activeWalletProvider.publicKey.toString() : walletAddress;
+        if (!currentKey) {
+          showToast('Connect wallet first to capture address', true);
+          return;
+        }
+        if (adminWallet2Input) {
+          adminWallet2Input.value = currentKey;
+          showToast('Assigned Admin 2: ' + formatAddress(currentKey));
+        }
+      });
+    }
 
     // Tabs switching
     $$('.admin-tab').forEach(tab => {
@@ -988,9 +1073,22 @@
       });
     }
 
-    // Restore session if active
-    if (sessionStorage.getItem('bob_admin_session') === 'active') {
-      isAdminLoggedIn = true;
+    // Restore session if active and wallet matches
+    try {
+      const savedSession = sessionStorage.getItem('bob_admin_session');
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        const s = getAdminSettings();
+        if (parsed && parsed.wallet && (parsed.wallet === s.adminWallet1 || parsed.wallet === s.adminWallet2)) {
+          isAdminLoggedIn = true;
+        } else {
+          sessionStorage.removeItem('bob_admin_session');
+          isAdminLoggedIn = false;
+        }
+      }
+    } catch (e) {
+      sessionStorage.removeItem('bob_admin_session');
+      isAdminLoggedIn = false;
     }
 
     // Apply settings on load
@@ -998,21 +1096,171 @@
     renderWalletsTable();
   }
 
-  function attemptAdminLogin() {
-    if (adminPassword.value === 'bob2026') {
+  // ─── Web3 Dual-Admin Authentication Handlers ───
+  function updateAdminAuthModalState() {
+    const s = getAdminSettings();
+    const currentKey = (activeWalletProvider && activeWalletProvider.publicKey) 
+      ? activeWalletProvider.publicKey.toString() 
+      : (isWalletConnected ? walletAddress : '');
+
+    // Format Masked Previews for Admin 1 and Admin 2
+    if (adminPreviewW1) {
+      adminPreviewW1.textContent = s.adminWallet1 ? formatAddress(s.adminWallet1) : '(Not Configured)';
+      adminPreviewW1.title = s.adminWallet1 || '';
+    }
+    if (adminPreviewW2) {
+      adminPreviewW2.textContent = s.adminWallet2 ? formatAddress(s.adminWallet2) : '(Not Configured)';
+      adminPreviewW2.title = s.adminWallet2 || '';
+    }
+
+    // Check if both admin wallets are empty (First-Time Initial Setup Mode)
+    const isSetupMode = !s.adminWallet1 && !s.adminWallet2;
+
+    if (!currentKey) {
+      // No wallet connected
+      if (adminAuthWalletStatus) {
+        adminAuthWalletStatus.textContent = 'Disconnected';
+        adminAuthWalletStatus.className = 'admin-auth-badge badge-pending';
+      }
+      if (adminAuthAddress) adminAuthAddress.textContent = 'No Solana wallet connected';
+      if (adminAuthStatusBox) {
+        adminAuthStatusBox.className = 'admin-status-box info';
+        if (adminAuthIcon) adminAuthIcon.textContent = '👻';
+        if (adminAuthDesc) adminAuthDesc.textContent = isSetupMode
+          ? 'Initial Setup Mode: Connect your Solana wallet to claim and bind Master Admin 1.'
+          : 'Please connect your Phantom or Solflare wallet to verify Dual-Admin permissions.';
+      }
+      if (adminConnectWalletBtn) adminConnectWalletBtn.style.display = 'block';
+      if (adminSignAuthBtn) adminSignAuthBtn.style.display = 'none';
+      if (adminClaimSetupBtn) adminClaimSetupBtn.style.display = 'none';
+      return;
+    }
+
+    // Wallet is connected
+    if (adminAuthAddress) adminAuthAddress.textContent = currentKey;
+    if (adminConnectWalletBtn) adminConnectWalletBtn.style.display = 'none';
+
+    if (isSetupMode) {
+      // Setup Mode: Allow claiming current wallet as Master Admin 1
+      if (adminAuthWalletStatus) {
+        adminAuthWalletStatus.textContent = 'Setup Mode 🛠️';
+        adminAuthWalletStatus.className = 'admin-auth-badge badge-setup';
+      }
+      if (adminAuthStatusBox) {
+        adminAuthStatusBox.className = 'admin-status-box info';
+        if (adminAuthIcon) adminAuthIcon.textContent = '👑';
+        if (adminAuthDesc) adminAuthDesc.textContent = 'No Admin Wallets configured yet. Click below to register this connected wallet as Master Admin 1.';
+      }
+      if (adminClaimSetupBtn) adminClaimSetupBtn.style.display = 'block';
+      if (adminSignAuthBtn) adminSignAuthBtn.style.display = 'none';
+    } else if (currentKey === s.adminWallet1 || currentKey === s.adminWallet2) {
+      // Authorized Admin!
+      const isMaster = currentKey === s.adminWallet1;
+      if (adminAuthWalletStatus) {
+        adminAuthWalletStatus.textContent = isMaster ? '👑 Master Admin 1' : '🛡️ Backup Admin 2';
+        adminAuthWalletStatus.className = 'admin-auth-badge badge-authorized';
+      }
+      if (adminAuthStatusBox) {
+        adminAuthStatusBox.className = 'admin-status-box success';
+        if (adminAuthIcon) adminAuthIcon.textContent = '✅';
+        if (adminAuthDesc) adminAuthDesc.textContent = `Wallet verified in Dual-Admin Whitelist as ${isMaster ? 'Master Admin' : 'Backup Admin'}. Sign the challenge to unlock control suite.`;
+      }
+      if (adminSignAuthBtn) adminSignAuthBtn.style.display = 'block';
+      if (adminClaimSetupBtn) adminClaimSetupBtn.style.display = 'none';
+    } else {
+      // Unauthorized Wallet
+      if (adminAuthWalletStatus) {
+        adminAuthWalletStatus.textContent = 'Unauthorized ⛔';
+        adminAuthWalletStatus.className = 'admin-auth-badge badge-unauthorized';
+      }
+      if (adminAuthStatusBox) {
+        adminAuthStatusBox.className = 'admin-status-box danger';
+        if (adminAuthIcon) adminAuthIcon.textContent = '🚫';
+        if (adminAuthDesc) adminAuthDesc.textContent = 'Access Denied: This wallet address is not registered in the Dual-Admin Whitelist. Please switch accounts in Phantom/Solflare.';
+      }
+      if (adminSignAuthBtn) adminSignAuthBtn.style.display = 'none';
+      if (adminClaimSetupBtn) adminClaimSetupBtn.style.display = 'none';
+    }
+  }
+
+  async function handleAdminSignAuth() {
+    if (!activeWalletProvider || !activeWalletProvider.publicKey) {
+      showToast('Please connect your Solana wallet first', true);
+      return;
+    }
+
+    const currentKey = activeWalletProvider.publicKey.toString();
+    const s = getAdminSettings();
+
+    if (currentKey !== s.adminWallet1 && currentKey !== s.adminWallet2) {
+      showToast('Unauthorized: Wallet is not in the Dual-Admin Whitelist', true);
+      return;
+    }
+
+    const nonce = Date.now();
+    const roleName = currentKey === s.adminWallet1 ? 'Master Admin 1' : 'Backup Admin 2';
+    const messageStr = `BoB Web3 Protocol Admin Verification\nSigner: ${currentKey}\nChallenge Nonce: ${nonce}\nRole: ${roleName}`;
+
+    try {
+      if (adminSignAuthBtn) {
+        adminSignAuthBtn.disabled = true;
+        adminSignAuthBtn.innerHTML = '<span class="btn-shimmer"></span>⏳ Awaiting Wallet Signature...';
+      }
+
+      // Check if wallet supports cryptographic message signing
+      if (activeWalletProvider.signMessage) {
+        const encoded = new TextEncoder().encode(messageStr);
+        await activeWalletProvider.signMessage(encoded, 'utf8');
+      }
+
+      // Authorized!
       isAdminLoggedIn = true;
-      sessionStorage.setItem('bob_admin_session', 'active');
-      adminPassword.value = '';
-      adminLoginError.style.display = 'none';
+      sessionStorage.setItem('bob_admin_session', JSON.stringify({
+        wallet: currentKey,
+        role: currentKey === s.adminWallet1 ? 'admin1' : 'admin2',
+        signedAt: nonce
+      }));
+
       closeModal('admin-login-modal');
       loadAdminSettings();
       openModal('admin-panel-modal');
-      showToast('Master Admin Access Authorized ⚡');
-    } else {
-      adminLoginError.style.display = 'block';
-      adminPassword.value = '';
-      adminPassword.focus();
+      showToast(`Master Control Access Granted (${roleName}) ⚡`);
+    } catch (err) {
+      if (err.message && err.message.includes('User rejected')) {
+        showToast('Authentication cancelled: Signature rejected in wallet', true);
+      } else {
+        showToast('Wallet sign error: ' + (err.message || 'Signature failed'), true);
+      }
+    } finally {
+      if (adminSignAuthBtn) {
+        adminSignAuthBtn.disabled = false;
+        adminSignAuthBtn.innerHTML = '<span class="btn-shimmer"></span>✍️ Sign Challenge to Authenticate (SIWS)';
+      }
     }
+  }
+
+  function handleAdminClaimSetup() {
+    if (!activeWalletProvider || !activeWalletProvider.publicKey) {
+      showToast('Please connect your Solana wallet first', true);
+      return;
+    }
+
+    const currentKey = activeWalletProvider.publicKey.toString();
+    const s = getAdminSettings();
+    s.adminWallet1 = currentKey;
+    saveAdminSettings(s);
+
+    isAdminLoggedIn = true;
+    sessionStorage.setItem('bob_admin_session', JSON.stringify({
+      wallet: currentKey,
+      role: 'admin1',
+      signedAt: Date.now()
+    }));
+
+    closeModal('admin-login-modal');
+    loadAdminSettings();
+    openModal('admin-panel-modal');
+    showToast('👑 Bound as Master Admin 1! Configure Backup Admin 2 in settings.', false);
   }
 
   function toggleAdminBtn(btn) {
@@ -1050,7 +1298,9 @@
 
     adminTaglineInput.value = s.tagline || heroTagline.textContent;
 
-    // Tab 2: Multi-Vault (4 Wallets)
+    // Tab 2: Dual-Admin Whitelist (2 Wallets) & Multi-Vault
+    if (adminWallet1Input) adminWallet1Input.value = s.adminWallet1 || '';
+    if (adminWallet2Input) adminWallet2Input.value = s.adminWallet2 || '';
     adminVaultInput.value = s.vaultAddress || '';
     if (adminVaultL2Input) adminVaultL2Input.value = s.vaultLayer2 || '';
     if (adminRerollWalletInput) adminRerollWalletInput.value = s.voteRerollWallet || '';
@@ -1098,6 +1348,10 @@
       gameVisible: adminGameToggle.classList.contains('active'),
       tagline: adminTaglineInput.value.trim(),
 
+      // Dual-Admin Whitelist (2 Authorized Wallets)
+      adminWallet1: adminWallet1Input ? adminWallet1Input.value.trim() : DEFAULT_SETTINGS.adminWallet1,
+      adminWallet2: adminWallet2Input ? adminWallet2Input.value.trim() : DEFAULT_SETTINGS.adminWallet2,
+
       // Multi-Vault
       vaultAddress: adminVaultInput.value.trim() || DEFAULT_SETTINGS.vaultAddress,
       vaultLayer2: adminVaultL2Input ? adminVaultL2Input.value.trim() : DEFAULT_SETTINGS.vaultLayer2,
@@ -1129,6 +1383,8 @@
     // Sync directly to Arena Game config
     try {
       localStorage.setItem('bob_admin_config', JSON.stringify({
+        adminWallet1: s.adminWallet1,
+        adminWallet2: s.adminWallet2,
         vaultLayer1: s.vaultAddress,
         vaultLayer2: s.vaultLayer2,
         voteRerollWallet: s.voteRerollWallet,
