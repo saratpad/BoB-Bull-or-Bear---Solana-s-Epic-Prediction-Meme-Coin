@@ -96,6 +96,7 @@
   const adminLoginModal = $('#admin-login-modal');
   const adminPanelModal = $('#admin-panel-modal');
   const adminWalletsBadge = $('#admin-wallets-badge');
+  const adminWalletsTbody = $('#admin-wallets-tbody');
 
   // Web3 Dual-Admin Auth Elements
   const adminAuthWalletStatus = $('#admin-auth-wallet-status');
@@ -153,7 +154,7 @@
   const adminRunScriptBtn = $('#admin-run-script-btn');
   const adminSaveAllBtn = $('#admin-save-all-btn');
   const adminLogoutBtn = $('#admin-logout-btn');
-  const adminWalletsTableBody = $('#admin-wallets-table-body');
+  const adminWalletsTableBody = $('#admin-wallets-tbody');
   const adminRefreshWalletsBtn = $('#admin-refresh-wallets-btn');
   const adminExportWalletsBtn = $('#admin-export-wallets-btn');
 
@@ -1468,17 +1469,18 @@
      ═══════════════════════════════════════════════ */
   function renderWalletsTable() {
     const list = getConnectedWallets();
-    adminWalletsBadge.textContent = list.length;
-    heroStakersCount.textContent = list.length > 0 ? `${list.length} Users` : '100%';
+    if (adminWalletsBadge) adminWalletsBadge.textContent = list.length;
+    if (heroStakersCount) heroStakersCount.textContent = list.length > 0 ? `${list.length} Users` : '100%';
 
-    if (!adminWalletsTbody) return;
+    const tbody = adminWalletsTbody || adminWalletsTableBody || document.getElementById('admin-wallets-tbody');
+    if (!tbody) return;
 
     if (list.length === 0) {
-      adminWalletsTbody.innerHTML = `<tr><td colspan="6" class="admin-table-empty">No external wallets recorded yet. Connect a wallet to test live monitor.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="admin-table-empty">No external wallets recorded yet. Connect a wallet to test live monitor.</td></tr>`;
       return;
     }
 
-    adminWalletsTbody.innerHTML = list.map(w => `
+    tbody.innerHTML = list.map(w => `
       <tr>
         <td title="${w.address}"><code>${formatAddress(w.address)}</code></td>
         <td><span class="network-dot" style="display:inline-block; margin-right:4px;"></span>${w.network || 'Mainnet'}</td>
